@@ -1,0 +1,68 @@
+﻿.contact-section {
+    position: relative;
+    background: none;
+    color: #fff;
+    text-align: center;
+    padding: 5rem 2rem;
+    overflow: hidden;
+}
+
+
+.contact-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35) );
+    mix-blend-mode: soft-light;
+    z-index: 0;
+}
+
+.contact__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2.5rem;
+    background: rgba(255, 250, 240, 0.85);
+    background: linear-gradient(180deg, #fdfaf3 0%, #faf4e8 100%);
+    border-radius: 24px;
+    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.15), inset 0 2px 4px rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(6px) saturate(120%);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .contact__inner h2 {
+        color: #103b30;
+        font-size: clamp(2rem, 5vw, 2.8rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+        text-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .contact__inner p {
+        color: #225c46;
+        font-size: 1.1rem;
+        max-width: 60ch;
+        margin: 0 auto 2rem;
+        line-height: 1.6;
+    }
+
+.btn--primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9rem 2rem;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #fefdf9, #e9fff0);
+    color: #0d2b22;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+    .btn--primary:hover {
+        transform: translateY(-3px) scale(1.03);
+        background: linear-gradient(180deg, #ffffff, #f2ffe8);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+    }

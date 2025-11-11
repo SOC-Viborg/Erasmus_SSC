@@ -1,0 +1,54 @@
+﻿﻿.map-container {
+    position: relative;
+    width: 100%;
+    min-height: 75vh;
+    overflow: hidden;
+}
+
+.content {
+    position: relative;
+    z-index: 1;
+    color: #002b5c;
+    font-size: 1.1rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    max-width: 800px;
+    margin: 3rem auto;
+    backdrop-filter: blur(3px);
+}
+
+.title {
+    font-size: 1.7rem;
+    font-weight: 650;
+    color: #001e42;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.body {
+    position: relative;
+    z-index: 1;
+    color: #002b5c;
+    font-size: 1.1rem;
+    padding: 2rem;
+    background: linear-gradient( 145deg, rgba(250, 245, 230, 0.88) 0%, rgba(255, 255, 250, 0.92) 100% );
+    border: 1px solid rgba(120, 90, 60, 0.15);
+    border-radius: 10px;
+    max-width: 800px;
+    margin: 3rem auto;
+    backdrop-filter: blur(6px) saturate(130%);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    text-align: justify;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.content a {
+    color: #004080;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+    .content a:hover {
+        text-decoration: underline;
+    }
