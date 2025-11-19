@@ -12,6 +12,9 @@ namespace Erasmus_SSC
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveWebAssemblyComponents();
+            builder.Services.AddControllers();
+            builder.Services.AddHttpClient();
+
 
             var app = builder.Build();
 
@@ -28,7 +31,8 @@ namespace Erasmus_SSC
             }
 
             app.UseHttpsRedirection();
-
+            app.UseStaticFiles();
+            app.MapControllers();
             app.UseAntiforgery();
 
             app.MapStaticAssets();

@@ -33,12 +33,6 @@
         filter: brightness(1.1);
     }
 
-@media (max-width: 768px) {
-    .partner-logo {
-        max-width: 140px;
-    }
-}
-
 .content {
     position: relative;
     z-index: 1;
@@ -63,7 +57,7 @@
 .body {
     position: relative;
     z-index: 1;
-    color: #002b5c;
+    color: #0b4124;
     font-size: 1.1rem;
     padding: 2rem;
     background: linear-gradient( 145deg, rgba(250, 245, 230, 0.88) 0%, rgba(255, 255, 250, 0.92) 100% );
@@ -75,6 +69,17 @@
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4);
     text-align: justify;
     transition: background 0.3s ease, box-shadow 0.3s ease;
+    opacity: 0;
+    transform: translateY(-40px);
+    animation: dropIn 1.2s ease-out forwards;
+}
+
+@keyframes dropIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 }
 
 .content a {
@@ -86,3 +91,33 @@
     .content a:hover {
         text-decoration: underline;
     }
+
+@media (max-width: 768px) {
+
+    .body {
+        font-size: 0.95rem;
+        line-height: 1.45;
+        padding: 1.2rem;
+        margin: 2rem auto;
+    }
+
+    .content {
+        padding: 1.2rem;
+        font-size: 0.92rem;
+        line-height: 1.45;
+    }
+
+        .content a {
+            font-size: 0.92rem;
+        }
+
+    .title {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+
+    .partner-logo {
+        max-width: 150px;
+        margin-bottom: 1rem;
+    }
+}

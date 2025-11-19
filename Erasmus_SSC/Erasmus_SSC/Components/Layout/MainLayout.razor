@@ -1,20 +1,21 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Nav
+@inject IJSRuntime JS
+@implements IDisposable
 
-<div class="navbar">
+<div class="navbar @(IsHomePage ? "navbar-animated" : "") ">
     <div class="navbar__container">
+
         <a href="/" class="navbar__logo">
-            Sustainable Skills in Construction
+            <img src="images/ssc-logo_footer.png" class="navbar__logo-img" />
+            <span class="navbar__logo-text">Sustainable Skills in Construction</span>
         </a>
 
-        <nav class="navbar__links">
-        
+       
             <a href="/about" class="nav__link @(Nav.Uri.Contains("/about") ? "active" : "")">About</a>
 
             <div class="nav__dropdown">
-                <button class="nav__link dropdown__toggle">
-                    Partners ▾
-                </button>
+                <button class="nav__link dropdown__toggle">Partners ▾</button>
                 <div class="dropdown__menu">
                     <a href="/partners/mercantec">Mercantec</a>
                     <a href="/partners/rogaland">Fagskolen Rogaland</a>
@@ -27,20 +28,27 @@
                     <a href="/partners/sint-michiel">VTI</a>
                 </div>
             </div>
+
             <a href="/news" class="nav__link @(Nav.Uri.Contains("/news") ? "active" : "")">What´s new?</a>
             <a href="/contact" class="nav__link @(Nav.Uri.Contains("/contact") ? "active" : "")">Contact</a>
-        </nav>
+      
     </div>
 </div>
 
-
-    <main>
+<main>
        
         <article class="content px-4">
             @Body
         </article>
     </main>
 
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+<CookieConsent />
 @* <footer class="footer text-dark text-center py-3 fixed-bottom">
     <div class="container d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center">
@@ -53,8 +61,25 @@
     </div>
 </footer>
  *@
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+@code{
+    private bool IsHomePage;
+    protected override void OnParametersSet()
+    {
+        var uri = Nav.Uri;
+        IsHomePage = uri.EndsWith("/") || uri.EndsWith("/home", StringComparison.OrdinalIgnoreCase);
+    }
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        JS.InvokeVoidAsync("scrollToTop");
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+}

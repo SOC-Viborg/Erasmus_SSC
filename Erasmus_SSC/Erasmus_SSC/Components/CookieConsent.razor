@@ -1,0 +1,92 @@
+﻿@inject IJSRuntime JS
+
+@if (!accepted)
+{
+    <div class="cookie-banner">
+        <p>
+            We use cookies to analyze site traffic. Do you accept analytics cookies?
+            <a href="/Privacy" style="color:#ccc; text-decoration:underline;">Learn more</a>
+        </p>
+        <div>
+            <button class="accept" @onclick="AcceptCookies">Accept</button>
+            <button class="decline" @onclick="DeclineCookies">Decline</button>
+        </div>
+    </div>
+}
+
+@code {
+    private bool accepted = false;
+    private bool initialized = false;
+    private const int ConsentDaysValid = 14; 
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !initialized)
+        {
+            try
+            {
+                var storedValue = await JS.InvokeAsync<string>("localStorage.getItem", "cookiesAccepted");
+                var storedDate = await JS.InvokeAsync<string>("localStorage.getItem", "cookiesAcceptedDate");
+
+                if (!string.IsNullOrEmpty(storedValue) && !string.IsNullOrEmpty(storedDate))
+                {
+                    if (DateTime.TryParse(storedDate, out var consentDate))
+                    {
+                        if ((DateTime.UtcNow - consentDate).TotalDays <= ConsentDaysValid)
+                        {
+                            accepted = storedValue == "true";
+                        }
+                        else
+                        {
+                            // expired -> remove consent
+                            await JS.InvokeVoidAsync("localStorage.removeItem", "cookiesAccepted");
+                            await JS.InvokeVoidAsync("localStorage.removeItem", "cookiesAcceptedDate");
+                        }
+                    }
+                }
+
+                initialized = true;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"CookieConsent init error: {ex.Message}");
+              
+            }
+        }
+    }
+
+    private async Task AcceptCookies()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", "cookiesAccepted", "true");
+            await JS.InvokeVoidAsync("localStorage.setItem", "cookiesAcceptedDate", DateTime.UtcNow.ToString("O"));
+            accepted = true;
+
+            // TODO: Replace 'G-XXXXXXX' with your actual Google Analytics Measurement ID
+            await JS.InvokeVoidAsync("gtag", "config", "G-XXXXXXX");
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving consent: {ex.Message}");
+        }
+    }
+
+    private async Task DeclineCookies()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", "cookiesAccepted", "false");
+            await JS.InvokeVoidAsync("localStorage.setItem", "cookiesAcceptedDate", DateTime.UtcNow.ToString("O"));
+            accepted = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving decline: {ex.Message}");
+        }
+    }
+}

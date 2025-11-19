@@ -58,3 +58,42 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.cookie-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #222;
+    color: #fff;
+    padding: 1em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+}
+
+    .cookie-banner p {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .cookie-banner button {
+        margin-left: 10px;
+        padding: 0.4em 0.8em;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+        .cookie-banner button.accept {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .cookie-banner button.decline {
+            background-color: #6c757d;
+            color: white;
+        }

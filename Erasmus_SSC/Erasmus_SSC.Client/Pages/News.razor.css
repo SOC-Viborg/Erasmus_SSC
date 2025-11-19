@@ -1,41 +1,13 @@
-﻿﻿.map-container {
-    position: relative;
-    width: 100%;
-    min-height: 75vh;
-    overflow: hidden;
-}
-
-.content {
+﻿.body {
     position: relative;
     z-index: 1;
-    color: #002b5c;
+    color: #0b4124;
     font-size: 1.1rem;
     padding: 2rem;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 10px;
-    max-width: 800px;
-    margin: 3rem auto;
-    backdrop-filter: blur(3px);
-}
-
-.title {
-    font-size: 1.7rem;
-    font-weight: 650;
-    color: #001e42;
-    text-align: center;
-    margin-bottom: 1.5rem;
-}
-
-.body {
-    position: relative;
-    z-index: 1;
-    color: #002b5c;
-    font-size: 1.1rem;
-    padding: 2rem;
-    background: linear-gradient( 145deg, rgba(250, 245, 230, 0.88) 0%, rgba(255, 255, 250, 0.92) 100% );
+    background: linear-gradient(145deg, rgba(250, 245, 230, 0.88) 0%, rgba(255, 255, 255, 0.92) 100%);
     border: 1px solid rgba(120, 90, 60, 0.15);
     border-radius: 10px;
-    max-width: 800px;
+    max-width: 850px;
     margin: 3rem auto;
     backdrop-filter: blur(6px) saturate(130%);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4);
@@ -43,12 +15,73 @@
     transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
-.content a {
-    color: #004080;
-    text-decoration: none;
-    font-weight: 600;
+.title {
+    color: #103b30;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800;
+    text-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    margin-bottom: 1.5rem;
 }
 
-    .content a:hover {
-        text-decoration: underline;
+.content {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+}
+
+    .content:hover {
+        transform: translateY(-4px);
     }
+
+.news-date {
+    font-size: 0.9rem;
+    color: #0b4124;
+    margin-bottom: 0.5rem;
+}
+
+.news-image {
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 1rem;
+    object-fit: cover;
+    max-height: 350px;
+}
+
+@media (max-width: 768px) {
+
+    
+    .body {
+        font-size: 1rem; 
+        padding: 1.5rem; 
+    }
+
+   
+    .title {
+        font-size: 1.5rem; 
+        margin-bottom: 1rem;
+    }
+
+   
+    .content {
+        padding: 1.2rem; 
+        font-size: 0.95rem; 
+        line-height: 1.45; 
+    }
+
+    .news-date {
+        font-size: 0.85rem; 
+    }
+
+    .news-title {
+        font-size: 1.3rem !important; 
+        line-height: 1.2;
+    }
+
+    .news-image {
+        max-height: 260px; 
+    }
+}

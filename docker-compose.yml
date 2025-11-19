@@ -1,0 +1,14 @@
+services:
+  erasmus_ssc:
+    image: ${DOCKER_REGISTRY-}erasmusssc
+    build:
+      context: .
+      dockerfile: Erasmus_SSC/Erasmus_SSC/Dockerfile
+    environment:
+        - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+        - ASPNETCORE_URLS=http://+:8080
+
+    ports:
+      - "${HTTP_PORT}:8080"
+    restart: unless-stopped
+   

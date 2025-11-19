@@ -1,9 +1,63 @@
 ﻿@page "/news"
 
+@inject HttpClient Http;
+@inject NavigationManager Nav;
 
-<div class="body"
-<div class="title" <strong>News</strong></div>
-<hr />
-<p>No news yet</p>
-<hr />
- </div>
+<div class="body">
+    <div class="title"><strong>News</strong></div>
+    <hr />
+
+    @if (NewsItems == null || NewsItems.Count == 0)
+    {
+        <p>No news yet</p>
+    }
+    else
+    {
+        @foreach (var item in NewsItems)
+        {
+            <div class="content">
+                <h3>@item.Title</h3>
+                <p class="news-date">@item.Date.ToString("yyyy-MM-dd")</p>
+                <p>@((MarkupString)item.Description)</p>
+
+                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                {
+                    <img src="@item.ImageUrl" alt="@item.Title" class="news-image" />
+                }
+
+                <hr />
+            </div>
+        }
+    }
+
+    <hr />
+</div>
+
+@code {
+    private List<NewsItem> NewsItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var url = new Uri(new Uri(Nav.BaseUri), "api/news");
+            var json = await Http.GetStringAsync(url);
+            
+            // temporary local json file
+            NewsItems = System.Text.Json.JsonSerializer.Deserialize<List<NewsItem>>(json) ?? new();
+        }
+        catch
+        {
+           
+            NewsItems = new(); // In case of error, show no news
+        }
+    }
+
+    public class NewsItem
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty; // Optional
+        public DateTime Date { get; set; }
+    }
+}
