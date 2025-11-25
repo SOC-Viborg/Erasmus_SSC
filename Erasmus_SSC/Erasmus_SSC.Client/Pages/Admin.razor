@@ -1,0 +1,98 @@
+﻿@page "/admin"
+
+<section class="admin-section">
+    <div class="admin-overlay"></div>
+
+    <div class="admin-container">
+
+        <h1 class="admin-title">Admin Dashboard</h1>
+
+        <div class="admin-card">
+            <h2>Users</h2>
+
+            <div class="admin-actions">
+                <button class="btn-primary">Add User</button>
+            </div>
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th style="width:120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Users)
+                    {
+                        <tr>
+                            <td>@user.Id</td>
+                            <td>@user.Email</td>
+                            <td>@user.Role</td>
+                            <td>
+                                <button class="btn-small">Edit</button>
+                                <button class="btn-small btn-danger">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+      
+        <div class="admin-card">
+            <h2>News</h2>
+
+            <div class="admin-actions">
+                <button class="btn-primary">Add News</button>
+            </div>
+
+            <ul class="news-list">
+                @foreach (var n in News)
+                {
+                    <li class="news-item">
+                        <div>
+                            <strong>@n.Title</strong>
+                            <p>@n.Date.ToShortDateString()</p>
+                        </div>
+                        <div>
+                            <button class="btn-small">Edit</button>
+                            <button class="btn-small btn-danger">Delete</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+
+    </div>
+</section>
+@code {
+    // Mock data
+    public List<UserModel> Users = new()
+    {
+        new UserModel{ Id = 1, Email="admin@example.com", Role="Admin"},
+        new UserModel{ Id = 2, Email="user@test.com", Role="User"},
+        
+    };
+
+    public List<NewsModel> News = new()
+    {
+        new NewsModel{ Title="Project Started", Date=DateTime.Now.AddDays(-5)},
+        
+        new NewsModel{ Title="Upcoming Event", Date=DateTime.Now.AddDays(1)},
+    };
+
+    public class UserModel
+    {
+        public int Id { get; set; }
+        public string Email { get; set; } = "";
+        public string Role { get; set; } = "";
+    }
+
+    public class NewsModel
+    {
+        public string Title { get; set; } = "";
+        public DateTime Date { get; set; }
+    }
+}

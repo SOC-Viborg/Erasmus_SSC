@@ -58,6 +58,7 @@
     font-weight: 650;
     color: #0b4124;
     text-align: center;
+    text-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
     margin-bottom: 1.5rem;
 }
 

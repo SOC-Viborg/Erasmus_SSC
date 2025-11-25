@@ -33,15 +33,9 @@
     z-index: -1;
      mix-blend-mode: soft-light;
 }
-/*.hero__scrim {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    background: radial-gradient(900px 420px at 50% 26%, rgba(255,255,255,.22) 0%, rgba(255,255,255,.12) 38%, rgba(255,255,255,0) 65%);
-}
 
-*/.hero__title {
+
+.hero__title {
     font-size: clamp(2.4rem, 6vw, 4.2rem);
     font-weight: 800;
     color: #2E3A2D;
@@ -90,8 +84,11 @@
 @media (max-width: 720px) {
     .brandbar {
         flex-direction: column;
-        gap: 1rem;
+        align-items: center;
+      
         margin-top: .5rem;
+        margin-left: 10%;
+        
     }
 
     .brandbar__logo {
@@ -102,17 +99,20 @@
             display: none !important;
         }
 
-       
-        .brandbar .ssc {
-            margin-top: -20px; 
-            transform: scale(1.1); 
-        }
+
+    .brandbar .ssc {
+        display: block;
+        margin: 0 auto;
+        transform: scale(1.05);
+      
+    }
 
         .brandbar {
             padding-top: 15px;
             padding-bottom: 8px;
         }
     }
+
 }
 .brandbar {
     display: flex;
@@ -139,6 +139,14 @@
         transform: translateY(8px) scale(1.1);
         filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)) drop-shadow(0 0 16px rgba(255,255,200,0.45)) brightness(1.1) contrast(1.05);
     }
+
+.brandbar .erasmus {
+    margin-left: 4rem;
+}
+
+.brandbar .ssc {
+    margin-right: 3rem;
+}
 
 .btn {
     display: inline-flex;
@@ -199,7 +207,7 @@
 }
 
 .partners {
-    scroll-margin-top: 25px;
+    scroll-margin-top: 20px;
     background: linear-gradient(180deg, var(--paper), #fff);
     padding: clamp(2rem, 3vw, 3rem) 1rem 4rem;
     border-top: 8px solid color-mix(in oklab, var(--wood-medium) 60%, #fff);

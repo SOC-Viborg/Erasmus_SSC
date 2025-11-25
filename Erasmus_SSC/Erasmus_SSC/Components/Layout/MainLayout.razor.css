@@ -173,7 +173,7 @@ main {
     position: absolute;
     top: 2.5rem;
     left: 0;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(250, 245, 230, 0.90);
     backdrop-filter: blur(7px) saturate(120%);
     border: 1px solid rgba(100, 70, 40, 0.25);
     border-radius: 5px;
