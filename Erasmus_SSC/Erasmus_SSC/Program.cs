@@ -14,7 +14,9 @@ namespace Erasmus_SSC
                 .AddInteractiveWebAssemblyComponents();
             builder.Services.AddControllers();
             builder.Services.AddHttpClient();
-
+            builder.Services.AddRazorComponents()
+            .AddInteractiveServerComponents()
+            .AddInteractiveWebAssemblyComponents();
 
             var app = builder.Build();
 
@@ -37,9 +39,9 @@ namespace Erasmus_SSC
 
             app.MapStaticAssets();
             app.MapRazorComponents<App>()
-                .AddInteractiveWebAssemblyRenderMode()
-                .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
-
+              .AddInteractiveServerRenderMode()
+              .AddInteractiveWebAssemblyRenderMode()
+              .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
             app.Run();
         }
     }

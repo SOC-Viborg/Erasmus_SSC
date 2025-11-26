@@ -5,6 +5,7 @@
     text-align: center;
     padding: 4rem 1rem;
     overflow: hidden;
+
 }
 
 .admin-overlay {
@@ -13,6 +14,7 @@
     background: linear-gradient( rgba(0,0,0,0.25), rgba(0,0,0,0.35) );
     mix-blend-mode: soft-light;
     z-index: 0;
+
 }
 
 
@@ -114,4 +116,78 @@
     justify-content: space-between;
     padding: 0.7rem 0;
     border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.admin-form-popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.admin-form {
+    background: linear-gradient(180deg, #fdfaf3, #faf4e8);
+    padding: 2rem;
+    width: 90%;
+    max-width: 420px;
+    border-radius: 18px;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+    animation: fadeIn .25s ease-out;
+}
+
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+    .form-group label {
+        font-weight: 600;
+        margin-bottom: .35rem;
+        display: block;
+        color: #0d2b22;
+    }
+
+.form-input {
+    width: 100%;
+    padding: .7rem 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.18);
+    background: #fff;
+    font-size: 1rem;
+}
+.news-image {
+    width: 120px;
+    height: auto;
+    border-radius: 8px;
+    margin-right: 1rem;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-cancel {
+    padding: .9rem 2rem;
+    border-radius: 8px;
+    background: #f5e2e2;
+    color: #7a1b1b;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

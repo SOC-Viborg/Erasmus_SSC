@@ -11,7 +11,36 @@
             <h2>Users</h2>
 
             <div class="admin-actions">
-                <button class="btn-primary">Add User</button>
+                <button class="btn-primary" @onclick="() => showAddUserForm = true">Add User</button>
+                @if (showAddUserForm)
+                {
+                    <div class="admin-form-popup">
+                        <div class="admin-form">
+                            <h3>Add New User</h3>
+
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input class="form-input" @bind="newUser.Username" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" class="form-input" @bind="newUser.Email" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" class="form-input" @bind="newUser.Password" />
+                            </div>
+
+                            <div class="form-buttons">
+                                <button class="btn-primary" @onclick="SaveUser">Save</button>
+                                <button class="btn-cancel" @onclick="() => showAddUserForm = false">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                                
+            }
             </div>
 
             <table class="admin-table">
@@ -45,8 +74,40 @@
             <h2>News</h2>
 
             <div class="admin-actions">
-                <button class="btn-primary">Add News</button>
-            </div>
+                <button class="btn-primary" @onclick="() => showAddNewsForm = true">Add News</button>
+
+                @if (showAddNewsForm)
+                {
+                    <div class="admin-form-popup">
+                        <div class="admin-form">
+                            <h3>Add News</h3>
+
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input class="form-input" @bind="newNews.Title" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" class="form-input" @bind="newNews.Date" />
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea class="form-input" @bind="newNews.Description"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Image URL</label>
+                                <input class="form-input" @bind="newNews.ImageUrl" placeholder="https://example.com/image.jpg" />
+                            </div>
+
+                            <div class="form-buttons">
+                                <button class="btn-primary" @onclick="SaveNews">Save</button>
+                                <button class="btn-cancel" @onclick="() => showAddNewsForm = false">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+                </div>
 
             <ul class="news-list">
                 @foreach (var n in News)
@@ -68,18 +129,62 @@
     </div>
 </section>
 @code {
+
+    bool showAddUserForm = false;
+
+    AddUserModel newUser = new();
+
+    void SaveUser()
+    {
+
+        Users.Add(new UserModel
+        {
+            Id = Users.Count + 1,
+            Email = newUser.Email,
+            Role = "User"
+        });
+
+        showAddUserForm = false;
+
+        newUser = new AddUserModel();
+    }
+
+    public class AddUserModel
+    {
+        public string Username { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+    bool showAddNewsForm = false;
+
+    NewsModel newNews = new();
+
+    void SaveNews()
+    {
+        News.Add(new NewsModel
+        {
+            Title = newNews.Title,
+            Date = DateTime.Today,
+            Description = newNews.Description,
+            ImageUrl = newNews.ImageUrl
+        });
+
+        newNews = new NewsModel();
+        showAddNewsForm = false;
+    }
+
     // Mock data
     public List<UserModel> Users = new()
     {
         new UserModel{ Id = 1, Email="admin@example.com", Role="Admin"},
         new UserModel{ Id = 2, Email="user@test.com", Role="User"},
-        
+
     };
 
     public List<NewsModel> News = new()
     {
         new NewsModel{ Title="Project Started", Date=DateTime.Now.AddDays(-5)},
-        
+
         new NewsModel{ Title="Upcoming Event", Date=DateTime.Now.AddDays(1)},
     };
 
@@ -93,6 +198,8 @@
     public class NewsModel
     {
         public string Title { get; set; } = "";
-        public DateTime Date { get; set; }
+        public DateTime Date { get; set; } = DateTime.Now;
+        public string Description { get; set; } = "";
+        public string ImageUrl { get; set; } = "";
     }
 }
