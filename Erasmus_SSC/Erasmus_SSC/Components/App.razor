@@ -11,7 +11,15 @@
     <ImportMap />
     <link rel="icon" type="image/svg+xml" href="favicon.svg?v=3" />
     <HeadOutlet />
-   
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S7LPM0YYR3"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+    </script>
 </head>
 
 <body data-enhance-nav ="false">
@@ -20,6 +28,7 @@
 
     <script src="_framework/blazor.web.js"></script>
     <script src="scroll.js"></script>
+    <script src="analytics.js"></script>
 </body>
 
 </html>

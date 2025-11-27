@@ -44,7 +44,10 @@
                         }
                     }
                 }
-
+                if (accepted)
+                {
+                    await JS.InvokeVoidAsync("enableAnalytics", "G-S7LPM0YYR3");
+                }
                 initialized = true;
                 StateHasChanged();
             }
@@ -54,6 +57,7 @@
               
             }
         }
+       
     }
 
     private async Task AcceptCookies()
@@ -61,17 +65,17 @@
         try
         {
             await JS.InvokeVoidAsync("localStorage.setItem", "cookiesAccepted", "true");
-            await JS.InvokeVoidAsync("localStorage.setItem", "cookiesAcceptedDate", DateTime.UtcNow.ToString("O"));
+            await JS.InvokeVoidAsync("localStorage.setItem", "cookiesAcceptedDate", DateTime.UtcNow.ToString());
             accepted = true;
 
-            // TODO: Replace 'G-XXXXXXX' with your actual Google Analytics Measurement ID
-            await JS.InvokeVoidAsync("gtag", "config", "G-XXXXXXX");
+            
+            await JS.InvokeVoidAsync("enableAnalytics", "G-S7LPM0YYR3");
 
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error saving consent: {ex.Message}");
+            Console.WriteLine("Error saving consent: " + ex.Message);
         }
     }
 
