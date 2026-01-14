@@ -1,57 +1,53 @@
 ﻿using Erasmus_SSC.Data;
 using Erasmus_SSC.Interfaces;
 using Erasmus_SSC.Models;
-
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-
 namespace Erasmus_SSC.Services;
 
-/// <summary>
-/// Provides functionality for generating JWT access tokens for both application and Active Directory users.
-/// Used for authentication and session management in Blazor WebAssembly applications.
-/// </summary>
 public class JWTService : IJWTService
 {
     private readonly ILogger<JWTService> _logger;
     private readonly IConfiguration _configuration;
     private readonly ApplicationDbContext _db;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="JWTService"/> class.
-    /// </summary>
-    /// <param name="logger">Logger for recording token generation events and errors.</param>
-    /// <param name="configuration">Application configuration for retrieving JWT settings.</param>
-    public JWTService(ILogger<JWTService> logger, IConfiguration configuration, ApplicationDbContext appDBContext)
+    public JWTService(ILogger<JWTService> logger, IConfiguration configuration, ApplicationDbContext db)
     {
         _logger = logger;
         _configuration = configuration;
-        _db = appDBContext;
+        _db = db;
     }
 
-    /// <summary>
-    /// Generates a JWT access token for a standard application user.
-    /// The token includes user claims and roles for secure authentication.
-    /// </summary>
-    /// <param name="user">The application user for whom the token is generated.</param>
-    /// <returns>
-    /// A JWT token string representing the authenticated user.
-    /// </returns>
-    public string CreateToken(User user)
+    public async Task<string> CreateTokenAsync(User user, CancellationToken ct = default)
     {
         try
         {
-            return GenerateToken(new List<Claim> {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email),
-            //new Claim(ClaimTypes.Role, user.UserRole.RoleName.ToString()),
-            new Claim(ClaimTypes.Name, user.UserName),
+            var roleName = user.Role?.RoleName;
 
-        });
+            if (string.IsNullOrWhiteSpace(roleName))
+            {
+                roleName = await _db.UserRoles
+                    .AsNoTracking()
+                    .Where(r => r.Id == user.RoleId)
+                    .Select(r => r.RoleName)
+                    .FirstOrDefaultAsync(ct);
+            }
+
+            roleName ??= "User";
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Email, user.Email),
+                new(ClaimTypes.Name, user.UserName),
+                new(ClaimTypes.Role, roleName),
+            };
+
+            return GenerateToken(claims); 
         }
         catch (Exception ex)
         {
@@ -59,7 +55,8 @@ public class JWTService : IJWTService
             throw;
         }
     }
-    public string GenerateToken(IEnumerable<Claim> claims)
+
+    private string GenerateToken(IEnumerable<Claim> claims)
     {
         var jwtSection = _configuration.GetSection("Jwt");
 
@@ -69,8 +66,6 @@ public class JWTService : IJWTService
 
         var issuer = jwtSection["Issuer"];
         var audience = jwtSection["Audience"];
-
-       
         var accessTokenMinutes = jwtSection.GetValue<int?>("AccessTokenMinutes") ?? 15;
 
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -89,6 +84,4 @@ public class JWTService : IJWTService
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
     }
-
-
 }

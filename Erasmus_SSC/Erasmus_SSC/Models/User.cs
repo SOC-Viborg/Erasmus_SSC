@@ -9,6 +9,7 @@
         public string PasswordHash { get; set; } = default!;
 
         public int RoleId { get; set; }
+
         public UserRole? Role { get; set; }
 
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();

@@ -6,8 +6,8 @@ namespace Erasmus_SSC.Interfaces;
 
 public interface IJWTService
 {
-   
-    string CreateToken(User user);
 
-    
+    Task<string> CreateTokenAsync(User user, CancellationToken ct = default);
+
+
 }

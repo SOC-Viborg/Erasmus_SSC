@@ -19,7 +19,7 @@ namespace Erasmus_SSC
         {
             var builder = WebApplication.CreateBuilder(args);
 
-         
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
          options
              .UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
@@ -34,7 +34,7 @@ namespace Erasmus_SSC
             builder.Services.AddScoped<ILoginAttemptService, LoginAttemptService>();
             builder.Services.AddControllers();
 
-           
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddAntiforgery(options =>
@@ -47,7 +47,7 @@ namespace Erasmus_SSC
                 .AddInteractiveServerComponents()
                 .AddInteractiveWebAssemblyComponents();
 
-         
+
             var jwtSection = builder.Configuration.GetSection("Jwt");
             var keyString = jwtSection["Key"];
 
@@ -80,9 +80,16 @@ namespace Erasmus_SSC
                         ClockSkew = TimeSpan.Zero
                     };
                 });
+            builder.Services.AddScoped<IUserAdminService, UserAdminService>();
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("AdminOnly", policy =>
+                    policy.RequireClaim("role", "Admin"));
+            });
 
             builder.Services.AddMemoryCache();
-          
+
 
             var app = builder.Build();
 
@@ -99,37 +106,38 @@ namespace Erasmus_SSC
                     user.PasswordHash = hasher.HashPassword(user, "Test12345");
                     db.SaveChanges();
                 }
+
+
+                if (app.Environment.IsDevelopment())
+                {
+                    app.UseWebAssemblyDebugging();
+                    app.UseSwagger();
+                    app.UseSwaggerUI();
+                }
+                else
+                {
+                    app.UseExceptionHandler("/Error");
+                    app.UseHsts();
+                }
+
+                app.UseHttpsRedirection();
+                app.UseStaticFiles();
+
+                app.UseRouting();
+
+                app.UseAuthentication();
+                app.UseAuthorization();
+                app.UseAntiforgery();
+                app.MapControllers();
+
+                app.MapStaticAssets();
+                app.MapRazorComponents<App>()
+                    .AddInteractiveServerRenderMode()
+                    .AddInteractiveWebAssemblyRenderMode()
+                    .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
+
+                app.Run();
             }
-
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseWebAssemblyDebugging();
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-            app.UseAntiforgery();
-            app.MapControllers();
-
-            app.MapStaticAssets();
-            app.MapRazorComponents<App>()
-                .AddInteractiveServerRenderMode()
-                .AddInteractiveWebAssemblyRenderMode()
-                .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
-
-            app.Run();
         }
     }
 }
