@@ -31,11 +31,11 @@ namespace Erasmus_SSC.Data
 
 
             modelBuilder.Entity<RefreshToken>()
-          .HasOne(rt => rt.User)
-          .WithMany(u => u.RefreshTokens)
-          .HasForeignKey(rt => rt.UserId);
+             .HasOne(rt => rt.User)
+             .WithMany(u => u.RefreshTokens)
+             .HasForeignKey(rt => rt.UserId);
 
-            
+
             modelBuilder.Entity<UserFile>()
                 .HasOne(f => f.OwnerUser)
                 .WithMany(u => u.UserFiles)

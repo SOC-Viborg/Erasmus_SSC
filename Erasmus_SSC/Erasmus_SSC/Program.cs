@@ -27,7 +27,7 @@ namespace Erasmus_SSC
             );
 
             builder.Services.AddScoped<IAuthService, AuthService>();
-
+            builder.Services.AddScoped<IUserAdminService, UserAdminService>();
             builder.Services.AddScoped<IJWTService, JWTService>();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddLogging();
@@ -36,7 +36,7 @@ namespace Erasmus_SSC
 
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+           
             builder.Services.AddAntiforgery(options =>
             {
                 options.HeaderName = "X-XSRF-TOKEN";
@@ -55,59 +55,63 @@ namespace Erasmus_SSC
             {
                 throw new InvalidOperationException("Jwt:Key is missing in appsettings.json");
             }
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = jwtSection["Issuer"],
+            ValidAudience = jwtSection["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString)),
+
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+    });
+
+            builder.Services.AddAuthorization();
 
             var key = Encoding.UTF8.GetBytes(keyString);
 
-            builder.Services
-                .AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                })
-                .AddJwtBearer(options =>
-                {
-                    options.RequireHttpsMetadata = true;
-                    options.SaveToken = true;
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = jwtSection["Issuer"],
-                        ValidAudience = jwtSection["Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(key),
-                        ClockSkew = TimeSpan.Zero
-                    };
-                });
-            builder.Services.AddScoped<IUserAdminService, UserAdminService>();
-
-            builder.Services.AddAuthorization(options =>
+            builder.Services.AddSwaggerGen(c =>
             {
-                options.AddPolicy("AdminOnly", policy =>
-                    policy.RequireClaim("role", "Admin"));
+                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Description = "Enter: Bearer {your JWT token}"
+                });
+
+                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
             });
+
 
             builder.Services.AddMemoryCache();
 
 
             var app = builder.Build();
 
-            // Seed test user password in development
-            if (app.Environment.IsDevelopment())
-            {
-                using var scope = app.Services.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-                var user = db.Users.FirstOrDefault(u => u.UserName == "test");
-                if (user != null)
-                {
-                    var hasher = new PasswordHasher<User>();
-                    user.PasswordHash = hasher.HashPassword(user, "Test12345");
-                    db.SaveChanges();
-                }
-
-
+         
                 if (app.Environment.IsDevelopment())
                 {
                     app.UseWebAssemblyDebugging();
@@ -140,4 +144,5 @@ namespace Erasmus_SSC
             }
         }
     }
-}
+
+

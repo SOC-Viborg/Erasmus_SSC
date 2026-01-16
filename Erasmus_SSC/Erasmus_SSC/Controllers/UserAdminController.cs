@@ -7,7 +7,7 @@ namespace Erasmus_SSC.Controllers
 {
     [ApiController]
     [Route("api/admin/users")]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class UserAdminController : ControllerBase
     {
         private readonly IUserAdminService _userAdminService;
