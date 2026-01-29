@@ -1,22 +1,71 @@
 ﻿@page "/login"
+@using Microsoft.AspNetCore.Components.Web
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using Erasmus_SSC.Client.ViewModels
+@using Erasmus_SSC.Client.Services
+@inject Erasmus_SSC.Client.Services.AuthApiClient AuthApi
+@inject NavigationManager Nav
+@inject JwtAuthStateProvider AuthState
 
 <section class="login-section">
-
     <div class="login-overlay"></div>
 
     <div class="login__inner">
-
         <h2>Login</h2>
-
         <p>Please enter your credentials to sign in.</p>
 
-        <div class="login__form">
-            <input type="text" placeholder="Email" class="login__input" />
-            <input type="password" placeholder="Password" class="login__input" />
+        <EditForm Model="_vm" OnValidSubmit="HandleLoginAsync" class="login__form">
+            <DataAnnotationsValidator />
 
-            <a class="btn-primary" href="#">Sign in</a>
-        </div>
+            <input class="login__input"
+                   type="text"
+                   placeholder="Email"
+                   @bind="_vm.Email" />
 
+            <input class="login__input"
+                   type="password"
+                   placeholder="Password"
+                   @bind="_vm.Password" />
+
+            @if (!string.IsNullOrWhiteSpace(_vm.Error))
+            {
+                <div class="login__error">@_vm.Error</div>
+            }
+
+            <button class="btn-primary" type="submit" disabled="@_vm.IsBusy">
+                Sign in
+            </button>
+        </EditForm>
     </div>
-
 </section>
+
+@code {
+    private readonly LoginVm _vm = new();
+
+    private async Task HandleLoginAsync()
+    {
+        _vm.Error = null;
+        _vm.IsBusy = true;
+
+        try
+        {
+            var email = _vm.Email?.Trim() ?? "";
+            var password = _vm.Password ?? "";
+
+            var tokens = await AuthApi.LoginAsync(email, password);
+
+            
+            await AuthState.NotifyLoggedInAsync(tokens.AccessToken);
+
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            _vm.Error = ex.Message;
+        }
+        finally
+        {
+            _vm.IsBusy = false;
+        }
+    }
+}

@@ -27,17 +27,17 @@ public sealed class AuthService : IAuthService
 
     public async Task<TokenResponseDto?> LoginUserAsync(LoginRequestDto request)
     {
-        if (request is null || string.IsNullOrWhiteSpace(request.UserName) || string.IsNullOrWhiteSpace(request.Password))
+        if (request is null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             return null;
 
         
-        var identifier = request.UserName.Trim();
+        var identifier = request.Email.Trim();
 
         var user = await _context.Users
             .Include(u => u.RefreshTokens)
             .Include(u => u.Role)
             .SingleOrDefaultAsync(u =>
-                u.UserName == identifier ||
+               
                 u.Email == identifier);
 
         if (user is null)
