@@ -1,17 +1,31 @@
 ﻿@page "/admin"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+
+@using Erasmus_SSC.Client.Dtos
+@using Erasmus_SSC.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject AdminUsersApiClient AdminApi
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Nav
 
 <section class="admin-section">
     <div class="admin-overlay"></div>
 
     <div class="admin-container">
-
         <h1 class="admin-title">Admin Dashboard</h1>
 
         <div class="admin-card">
             <h2>Users</h2>
 
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <div class="login__error">@_error</div>
+            }
+
             <div class="admin-actions">
-                <button class="btn-primary" @onclick="() => showAddUserForm = true">Add User</button>
+                <button class="btn-primary" @onclick="ShowAddUser">Add User</button>
+
                 @if (showAddUserForm)
                 {
                     <div class="admin-form-popup">
@@ -20,7 +34,7 @@
 
                             <div class="form-group">
                                 <label>Username</label>
-                                <input class="form-input" @bind="newUser.Username" />
+                                <input class="form-input" @bind="newUser.UserName" />
                             </div>
 
                             <div class="form-group">
@@ -34,172 +48,169 @@
                             </div>
 
                             <div class="form-buttons">
-                                <button class="btn-primary" @onclick="SaveUser">Save</button>
-                                <button class="btn-cancel" @onclick="() => showAddUserForm = false">Cancel</button>
+                                <button class="btn-primary" @onclick="SaveUserAsync" disabled="@_busy">Save</button>
+                                <button class="btn-cancel" @onclick="CancelAddUser" disabled="@_busy">Cancel</button>
                             </div>
                         </div>
                     </div>
-                                
-            }
+                }
             </div>
 
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th style="width:120px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in User)
-                    {
+            @if (_loading)
+            {
+                <p>Loading users...</p>
+            }
+            else
+            {
+                <table class="admin-table">
+                    <thead>
                         <tr>
-                            <td>@user.Id</td>
-                            <td>@user.Email</td>
-                            <td>@user.Role</td>
-                            <td>
-                                <button class="btn-small">Edit</button>
-                                <button class="btn-small btn-danger">Delete</button>
-                            </td>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th style="width:120px;">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Users)
+                        {
+                            <tr>
+                                <td>@user.Id</td>
+                                <td>@user.Email</td>
+                                <td>@user.UserRole</td>
+                                <td>
+                                    <button class="btn-small btn-danger"
+                                            disabled="@_busy"
+                                            @onclick="() => DeleteUserAsync(user.Id)">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
         </div>
 
-      
+       
         <div class="admin-card">
             <h2>News</h2>
-
-            <div class="admin-actions">
-                <button class="btn-primary" @onclick="() => showAddNewsForm = true">Add News</button>
-
-                @if (showAddNewsForm)
-                {
-                    <div class="admin-form-popup">
-                        <div class="admin-form">
-                            <h3>Add News</h3>
-
-                            <div class="form-group">
-                                <label>Title</label>
-                                <input class="form-input" @bind="newNews.Title" />
-                            </div>
-
-                            <div class="form-group">
-                                <label>Date</label>
-                                <input type="date" class="form-input" @bind="newNews.Date" />
-                            </div>
-                            <div class="form-group">
-                                <label>Description</label>
-                                <textarea class="form-input" @bind="newNews.Description"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Image URL</label>
-                                <input class="form-input" @bind="newNews.ImageUrl" placeholder="https://example.com/image.jpg" />
-                            </div>
-
-                            <div class="form-buttons">
-                                <button class="btn-primary" @onclick="SaveNews">Save</button>
-                                <button class="btn-cancel" @onclick="() => showAddNewsForm = false">Cancel</button>
-                            </div>
-                        </div>
-                    </div>
-                }
-                </div>
-
-            <ul class="news-list">
-                @foreach (var n in News)
-                {
-                    <li class="news-item">
-                        <div>
-                            <strong>@n.Title</strong>
-                            <p>@n.Date.ToShortDateString()</p>
-                        </div>
-                        <div>
-                            <button class="btn-small">Edit</button>
-                            <button class="btn-small btn-danger">Delete</button>
-                        </div>
-                    </li>
-                }
-            </ul>
+            
         </div>
-
     </div>
 </section>
+
 @code {
+    private bool _loading = true;
+    private bool _busy = false;
+    private string? _error;
 
-    bool showAddUserForm = false;
+    private bool showAddUserForm = false;
+    private AdminCreateUserDto newUser = new();
 
-    AddUserModel newUser = new();
+    public List<AdminUserDto> Users { get; set; } = new();
 
-    void SaveUser()
+    protected override async Task OnInitializedAsync()
     {
+        _error = null;
+        _loading = true;
 
-        User.Add(new UserModel
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        var principal = state.User;
+
+        if (principal.Identity?.IsAuthenticated != true)
         {
-            Id = User.Count + 1,
-            Email = newUser.Email,
-            Role = "User"
-        });
+            Nav.NavigateTo("/login");
+            return;
+        }
 
+        if (!principal.IsInRole("Admin"))
+        {
+            _error = "Access denied: Admin role required.";
+            Nav.NavigateTo("/");
+            return;
+        }
+
+        await ReloadUsersAsync();
+    }
+
+
+    private async Task ReloadUsersAsync()
+    {
+        _error = null;
+        _loading = true;
+
+        try
+        {
+            Users = await AdminApi.GetUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ShowAddUser()
+    {
+        _error = null;
+        showAddUserForm = true;
+    }
+
+    private void CancelAddUser()
+    {
         showAddUserForm = false;
-
-        newUser = new AddUserModel();
+        newUser = new AdminCreateUserDto();
     }
 
-    public class AddUserModel
+    private async Task SaveUserAsync()
     {
-        public string Username { get; set; } = "";
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
-    }
-    bool showAddNewsForm = false;
+        _error = null;
+        _busy = true;
 
-    NewsModel newNews = new();
-
-    void SaveNews()
-    {
-        News.Add(new NewsModel
+        try
         {
-            Title = newNews.Title,
-            Date = DateTime.Today,
-            Description = newNews.Description,
-            ImageUrl = newNews.ImageUrl
-        });
+            var created = await AdminApi.CreateUserAsync(new AdminCreateUserDto
+            {
+                UserName = newUser.UserName.Trim(),
+                Email = newUser.Email.Trim(),
+                Password = newUser.Password
+            });
 
-        newNews = new NewsModel();
-        showAddNewsForm = false;
+            Users.Add(created);
+            showAddUserForm = false;
+            newUser = new AdminCreateUserDto();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 
-    // Mock data
-    public List<UserModel> User = new()
+    private async Task DeleteUserAsync(int id)
     {
-        new UserModel{ Id = 1, Email="admin@example.com", Role="Admin"},
-        new UserModel{ Id = 2, Email="user@test.com", Role="User"},
+        _error = null;
+        _busy = true;
 
-    };
-
-    public List<NewsModel> News = new()
-    {
-        new NewsModel{ Title="Project Started", Date=DateTime.Now.AddDays(-5)},
-
-        new NewsModel{ Title="Upcoming Event", Date=DateTime.Now.AddDays(1)},
-    };
-
-    public class UserModel
-    {
-        public int Id { get; set; }
-        public string Email { get; set; } = "";
-        public string Role { get; set; } = "";
-    }
-
-    public class NewsModel
-    {
-        public string Title { get; set; } = "";
-        public DateTime Date { get; set; } = DateTime.Now;
-        public string Description { get; set; } = "";
-        public string ImageUrl { get; set; } = "";
+        try
+        {
+            await AdminApi.DeleteUserAsync(id);
+            Users.RemoveAll(u => u.Id == id);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 }

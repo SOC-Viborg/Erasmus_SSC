@@ -14,8 +14,7 @@ namespace Erasmus_SSC.Client
 
 
             builder.Services.AddAuthorizationCore();
-           builder.Services.AddScoped<ITokenStore, ServerTokenStore>();
-          
+            builder.Services.AddScoped<ITokenStore, BrowserTokenStore>();
             builder.Services.AddScoped<JwtAuthStateProvider>();
             builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<JwtAuthStateProvider>());
 
@@ -24,7 +23,10 @@ namespace Erasmus_SSC.Client
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
             });
 
+
+
             builder.Services.AddScoped<AuthApiClient>();
+            builder.Services.AddScoped<AdminUsersApiClient>();
             await builder.Build().RunAsync();
         }
     }

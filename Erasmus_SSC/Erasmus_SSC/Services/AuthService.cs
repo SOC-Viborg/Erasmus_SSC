@@ -30,15 +30,13 @@ public sealed class AuthService : IAuthService
         if (request is null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             return null;
 
-        
-        var identifier = request.Email.Trim();
+
+        var identifier = request.Email.Trim().ToLowerInvariant();
 
         var user = await _context.Users
             .Include(u => u.RefreshTokens)
             .Include(u => u.Role)
-            .SingleOrDefaultAsync(u =>
-               
-                u.Email == identifier);
+            .SingleOrDefaultAsync(u => u.Email.ToLower() == identifier);
 
         if (user is null)
         {
@@ -71,11 +69,11 @@ public sealed class AuthService : IAuthService
         user.RefreshTokens.Add(newRefreshToken);
         await _context.SaveChangesAsync();
 
-        var accessToken = _jwtService.CreateTokenAsync(user);
+        var accessToken = await _jwtService.CreateTokenAsync(user);
 
         return new TokenResponseDto
         {
-            AccessToken = await _jwtService.CreateTokenAsync(user),
+            AccessToken = accessToken,
             RefreshToken = newRefreshToken.Token
         };
     }

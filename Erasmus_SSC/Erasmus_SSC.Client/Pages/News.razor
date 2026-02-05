@@ -1,5 +1,5 @@
 ﻿@page "/news"
-
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @inject HttpClient Http;
 @inject NavigationManager Nav;
 
@@ -40,8 +40,7 @@
     {
         try
         {
-            var url = new Uri(new Uri(Nav.BaseUri), "api/news");
-            var json = await Http.GetStringAsync(url);
+            var json = await Http.GetStringAsync("/api/news");
             
             // temporary local json file
             NewsItems = System.Text.Json.JsonSerializer.Deserialize<List<NewsItem>>(json) ?? new();

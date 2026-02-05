@@ -20,6 +20,22 @@ namespace Erasmus_SSC.Controllers
             _userAdminService = userAdminService;
             _logger = logger;
         }
+       
+        
+        [HttpGet]
+        public async Task<ActionResult<IReadOnlyList<UserDto>>> GetUsers(CancellationToken ct)
+        {
+            try
+            {
+                var users = await _userAdminService.GetUsersAsync(ct);
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetUsers failed");
+                return StatusCode(500, "An internal error occurred. Please try again later.");
+            }
+        }
 
         /// <summary>
         /// Admin creates a new user (default role = User).
@@ -31,7 +47,7 @@ namespace Erasmus_SSC.Controllers
             {
                 var created = await _userAdminService.CreateUserAsync(dto, ct);
                 // 201 + payload
-                return CreatedAtAction(nameof(GetUserStub), new { id = created.Id }, created);
+                return Created($"/api/admin/users/{created.Id}", created);
             }
             catch (ArgumentException ex)
             {
@@ -79,7 +95,5 @@ namespace Erasmus_SSC.Controllers
 
         
        
-        [HttpGet("{id:int}")]
-        public IActionResult GetUserStub([FromRoute] int id) => Ok(new { id });
-    }
+        }
 }

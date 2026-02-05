@@ -57,7 +57,7 @@ namespace Erasmus_SSC.Services
             var user = new User
             {
                 UserName = userName,
-                Email = email,
+                Email = normalizedEmail,
                 RoleId = DefaultUserRoleId
             };
 
@@ -82,6 +82,21 @@ namespace Erasmus_SSC.Services
                 Email = user.Email,
                 UserRole = roleName
             };
+        }
+        public async Task<IReadOnlyList<UserDto>> GetUsersAsync(CancellationToken ct = default)
+        {
+            return await _context.Users
+                .AsNoTracking()
+                .Include(u => u.Role)
+                .OrderBy(u => u.Id)
+                .Select(u => new UserDto
+                {
+                    Id = u.Id,
+                    UserName = u.UserName,
+                    Email = u.Email,
+                    UserRole = u.Role != null ? u.Role.RoleName : "User"
+                })
+                .ToListAsync(ct);
         }
 
         public async Task<bool> DeleteUserAsync(int userId, CancellationToken ct = default)
