@@ -186,5 +186,36 @@ public class Program
 
         db.Users.Add(admin);
         await db.SaveChangesAsync();
+
+        // Seed news from wwwroot/data/news.json if DB is empty
+        if (!await db.News.AnyAsync())
+        {
+            var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+            var path = Path.Combine(env.WebRootPath, "data", "news.json");
+
+            if (File.Exists(path))
+            {
+                var json = await File.ReadAllTextAsync(path);
+                var seed = System.Text.Json.JsonSerializer.Deserialize<List<Erasmus_SSC.Dtos.News.PublicNewsDto>>(
+                    json,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new();
+
+                foreach (var n in seed)
+                {
+                    db.News.Add(new Erasmus_SSC.Models.News
+                    {
+                        Title = n.Title,
+                        Description = n.Description,
+                        ImageUrl = string.IsNullOrWhiteSpace(n.ImageUrl) ? null : n.ImageUrl,
+                        PublishedAt = DateTime.SpecifyKind(n.Date, DateTimeKind.Utc)
+                    });
+                }
+
+                await db.SaveChangesAsync();
+            }
+        }
+
     }
+
 }

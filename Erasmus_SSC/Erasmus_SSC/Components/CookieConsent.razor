@@ -1,6 +1,6 @@
 ﻿@inject IJSRuntime JS
 
-@if (!accepted)
+@if (showBanner)
 {
     <div class="cookie-banner">
         <p>
@@ -15,82 +15,72 @@
 }
 
 @code {
-    private bool accepted = false;
-    private bool initialized = false;
-    private const int ConsentDaysValid = 14; 
+    private bool showBanner = true;
+
+    private const int ConsentDaysValid = 14;
+    private const string ConsentKey = "cookiesAccepted";        
+    private const string ConsentDateKey = "cookiesAcceptedDate";
+    private const string MeasurementId = "G-S7LPM0YYR3";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !initialized)
-        {
-            try
-            {
-                var storedValue = await JS.InvokeAsync<string>("localStorage.getItem", "cookiesAccepted");
-                var storedDate = await JS.InvokeAsync<string>("localStorage.getItem", "cookiesAcceptedDate");
+        if (!firstRender) return;
 
-                if (!string.IsNullOrEmpty(storedValue) && !string.IsNullOrEmpty(storedDate))
-                {
-                    if (DateTime.TryParse(storedDate, out var consentDate))
-                    {
-                        if ((DateTime.UtcNow - consentDate).TotalDays <= ConsentDaysValid)
-                        {
-                            accepted = storedValue == "true";
-                        }
-                        else
-                        {
-                            // expired -> remove consent
-                            await JS.InvokeVoidAsync("localStorage.removeItem", "cookiesAccepted");
-                            await JS.InvokeVoidAsync("localStorage.removeItem", "cookiesAcceptedDate");
-                        }
-                    }
-                }
-                if (accepted)
-                {
-                    await JS.InvokeVoidAsync("enableAnalytics", "G-S7LPM0YYR3");
-                }
-                initialized = true;
-                StateHasChanged();
-            }
-            catch (Exception ex)
+        try
+        {
+            var storedValue = await JS.InvokeAsync<string>("localStorage.getItem", ConsentKey);
+            var storedDate = await JS.InvokeAsync<string>("localStorage.getItem", ConsentDateKey);
+
+            if (!string.IsNullOrWhiteSpace(storedValue) && !string.IsNullOrWhiteSpace(storedDate)
+                && DateTime.TryParse(storedDate, null, System.Globalization.DateTimeStyles.RoundtripKind, out var consentDate))
             {
-                Console.WriteLine($"CookieConsent init error: {ex.Message}");
-              
+                var stillValid = (DateTime.UtcNow - consentDate.ToUniversalTime()).TotalDays <= ConsentDaysValid;
+
+                if (stillValid)
+                {
+                   
+                    showBanner = false;
+
+                  
+                    if (storedValue == "true")
+                        await JS.InvokeVoidAsync("enableAnalytics", MeasurementId);
+                }
+                else
+                {
+                    
+                    await JS.InvokeVoidAsync("localStorage.removeItem", ConsentKey);
+                    await JS.InvokeVoidAsync("localStorage.removeItem", ConsentDateKey);
+                    showBanner = true;
+                }
             }
+
+            StateHasChanged();
         }
-       
+        catch
+        {
+           
+            showBanner = true;
+            StateHasChanged();
+        }
     }
 
     private async Task AcceptCookies()
     {
-        try
-        {
-            await JS.InvokeVoidAsync("localStorage.setItem", "cookiesAccepted", "true");
-            await JS.InvokeVoidAsync("localStorage.setItem", "cookiesAcceptedDate", DateTime.UtcNow.ToString());
-            accepted = true;
+        await JS.InvokeVoidAsync("localStorage.setItem", ConsentKey, "true");
+        await JS.InvokeVoidAsync("localStorage.setItem", ConsentDateKey, DateTime.UtcNow.ToString("O"));
 
-            
-            await JS.InvokeVoidAsync("enableAnalytics", "G-S7LPM0YYR3");
+        showBanner = false;
+        await JS.InvokeVoidAsync("enableAnalytics", MeasurementId);
 
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error saving consent: " + ex.Message);
-        }
+        StateHasChanged();
     }
 
     private async Task DeclineCookies()
     {
-        try
-        {
-            await JS.InvokeVoidAsync("localStorage.setItem", "cookiesAccepted", "false");
-            await JS.InvokeVoidAsync("localStorage.setItem", "cookiesAcceptedDate", DateTime.UtcNow.ToString("O"));
-            accepted = true;
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error saving decline: {ex.Message}");
-        }
+        await JS.InvokeVoidAsync("localStorage.setItem", ConsentKey, "false");
+        await JS.InvokeVoidAsync("localStorage.setItem", ConsentDateKey, DateTime.UtcNow.ToString("O"));
+
+        showBanner = false;
+        StateHasChanged();
     }
 }

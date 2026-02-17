@@ -4,7 +4,9 @@
 @using Erasmus_SSC.Client.Dtos
 @using Erasmus_SSC.Client.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
 
+@inject AdminNewsApiClient NewsApi
 @inject AdminUsersApiClient AdminApi
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager Nav
@@ -92,11 +94,98 @@
             }
         </div>
 
-       
+
         <div class="admin-card">
             <h2>News</h2>
-            
+
+            @if (!string.IsNullOrWhiteSpace(_newsError))
+            {
+                <div class="login__error">@_newsError</div>
+            }
+
+            <div class="admin-actions">
+                <button class="btn-primary" @onclick="ShowAddNews">Add News</button>
+
+                @if (showAddNewsForm)
+                {
+                    <div class="admin-form-popup">
+                        <div class="admin-form">
+                            <h3>Add News</h3>
+
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input class="form-input" @bind="newNews.Title" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" class="form-input"
+                                       @bind-value="newNews.Date"
+                                       @bind-value:format="yyyy-MM-dd" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Description (HTML allowed)</label>
+                                <textarea class="form-input" style="min-height:140px;"
+                                          @bind="newNews.Description"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Image (optional)</label>
+                                <InputFile OnChange="OnNewsImageSelected" />
+                            </div>
+
+                            <div class="form-buttons">
+                                <button class="btn-primary" @onclick="SaveNewsAsync" disabled="@_newsBusy">Save</button>
+                                <button class="btn-cancel" @onclick="CancelAddNews" disabled="@_newsBusy">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (_newsLoading)
+            {
+                <p>Loading news...</p>
+            }
+            else if (NewsItems.Count == 0)
+            {
+                <p>No news yet</p>
+            }
+            else
+            {
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width:70px;">ID</th>
+                            <th>Title</th>
+                            <th style="width:130px;">Date</th>
+                            <th style="width:120px;">Image</th>
+                            <th style="width:120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var n in NewsItems)
+                        {
+                            <tr>
+                                <td>@n.Id</td>
+                                <td>@n.Title</td>
+                                <td>@n.Date.ToString("yyyy-MM-dd")</td>
+                                <td>@(!string.IsNullOrWhiteSpace(n.ImageUrl) ? "Yes" : "No")</td>
+                                <td>
+                                    <button class="btn-small btn-danger"
+                                            disabled="@_newsBusy"
+                                            @onclick="() => DeleteNewsAsync(n.Id)">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
         </div>
+
     </div>
 </section>
 
@@ -132,6 +221,7 @@
         }
 
         await ReloadUsersAsync();
+        await ReloadNewsAsync();
     }
 
 
@@ -213,4 +303,113 @@
             _busy = false;
         }
     }
+    private bool _newsLoading = true;
+    private bool _newsBusy = false;
+    private string? _newsError;
+
+    private bool showAddNewsForm = false;
+    private NewsCreateModel newNews = new();
+    private IBrowserFile? newNewsImage;
+
+    public List<Erasmus_SSC.Client.Dtos.AdminNewsDto> NewsItems { get; set; } = new();
+
+    private sealed class NewsCreateModel
+    {
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+        public DateTime Date { get; set; } = DateTime.UtcNow.Date;
+    }
+
+    private void ShowAddNews()
+    {
+        _newsError = null;
+        showAddNewsForm = true;
+    }
+
+    private void CancelAddNews()
+    {
+        showAddNewsForm = false;
+        newNews = new NewsCreateModel();
+        newNewsImage = null;
+    }
+
+    private void OnNewsImageSelected(InputFileChangeEventArgs e)
+    {
+        newNewsImage = e.FileCount > 0 ? e.File : null;
+    }
+
+    private async Task ReloadNewsAsync()
+    {
+        _newsError = null;
+        _newsLoading = true;
+        try
+        {
+            NewsItems = await NewsApi.GetNewsAsync();
+        }
+        catch (Exception ex)
+        {
+            _newsError = ex.Message;
+        }
+        finally
+        {
+            _newsLoading = false;
+        }
+    }
+
+    private async Task SaveNewsAsync()
+    {
+        _newsError = null;
+        _newsBusy = true;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(newNews.Title) || string.IsNullOrWhiteSpace(newNews.Description))
+            {
+                _newsError = "Title and Description are required.";
+                return;
+            }
+
+
+            var description = newNews.Description.Replace("\r\n", "\n").Replace("\n", "<br>");
+
+            var created = await NewsApi.CreateNewsAsync(
+                newNews.Title.Trim(),
+                description,
+                newNews.Date,
+                newNewsImage
+            );
+
+            NewsItems.Insert(0, created);
+            CancelAddNews();
+        }
+        catch (Exception ex)
+        {
+            _newsError = ex.Message;
+        }
+        finally
+        {
+            _newsBusy = false;
+        }
+    }
+
+    private async Task DeleteNewsAsync(int id)
+    {
+        _newsError = null;
+        _newsBusy = true;
+
+        try
+        {
+            await NewsApi.DeleteNewsAsync(id);
+            NewsItems.RemoveAll(x => x.Id == id);
+        }
+        catch (Exception ex)
+        {
+            _newsError = ex.Message;
+        }
+        finally
+        {
+            _newsBusy = false;
+        }
+    }
+
 }

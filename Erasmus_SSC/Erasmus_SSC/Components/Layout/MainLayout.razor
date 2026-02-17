@@ -49,19 +49,7 @@
     <span class="dismiss">🗙</span>
 </div>
 
-<CookieConsent />
-@* <footer class="footer text-dark text-center py-3 fixed-bottom">
-    <div class="container d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
-            <img src="/images/ssc-logo_footer.png" alt="SSC Logo" class="footer-logo me-3" />
-           
-        </div>
-        <small class="footer-info">
-            Project Duration: Sept 2025 – Aug 2028 | Budget: €400,000
-        </small>
-    </div>
-</footer>
- *@
+<CookieConsent @rendermode="new InteractiveServerRenderMode(prerender: false)" />
 @code{
     private bool IsHomePage;
     protected override void OnParametersSet()

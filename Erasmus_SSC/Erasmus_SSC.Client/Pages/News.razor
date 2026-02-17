@@ -1,5 +1,8 @@
 ﻿@page "/news"
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+
+@using System.Net.Http.Json
+@using Erasmus_SSC.Client.Dtos
 @inject HttpClient Http;
 @inject NavigationManager Nav;
 
@@ -33,30 +36,35 @@
     <hr />
 </div>
 
+
 @code {
-    private List<NewsItem> NewsItems = new();
+    private List<PublicNewsDto> NewsItems = new();
+    private bool _loading = true;
+    private string? _error;
 
     protected override async Task OnInitializedAsync()
     {
+        _loading = true;
+        _error = null;
+
         try
         {
-            var json = await Http.GetStringAsync("/api/news");
             
-            // temporary local json file
-            NewsItems = System.Text.Json.JsonSerializer.Deserialize<List<NewsItem>>(json) ?? new();
-        }
-        catch
-        {
-           
-            NewsItems = new(); // In case of error, show no news
-        }
-    }
+            NewsItems = await Http.GetFromJsonAsync<List<PublicNewsDto>>("/api/news") ?? new();
 
-    public class NewsItem
-    {
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string ImageUrl { get; set; } = string.Empty; // Optional
-        public DateTime Date { get; set; }
+            NewsItems = NewsItems
+                .OrderByDescending(x => x.Date)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _error = "Failed to load news: " + ex.Message;
+            Console.Error.WriteLine(ex);
+            NewsItems = new();
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 }
