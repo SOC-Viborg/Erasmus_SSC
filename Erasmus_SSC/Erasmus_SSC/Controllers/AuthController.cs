@@ -115,7 +115,17 @@ namespace Erasmus_SSC.Controllers
                 return StatusCode(500, "An internal error occurred. Please try again later.");
             }
         }
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("refreshToken", new CookieOptions
+            {
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
 
+            return Ok();
+        }
 
     }
 }

@@ -91,7 +91,17 @@
     .btn-small.btn-danger {
         background: #eab7b7;
     }
+    .btn-small.btn-edit {
+        background: #cfe7d6; 
+    }
 
+td.actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+}
 .admin-table {
     width: 100%;
     margin-top: 1rem;

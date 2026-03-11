@@ -30,6 +30,7 @@
 
                 @if (showAddUserForm)
                 {
+
                     <div class="admin-form-popup">
                         <div class="admin-form">
                             <h3>Add New User</h3>
@@ -56,6 +57,35 @@
                         </div>
                     </div>
                 }
+                @if (_showEditUser)
+                {
+                    <div class="admin-form-popup">
+                        <div class="admin-form">
+                            <h3>Edit User</h3>
+
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input class="form-input" @bind="_editUser.UserName" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" class="form-input" @bind="_editUser.Email" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>New Password (optional)</label>
+                                <input type="password" class="form-input" @bind="_editUser.Password" />
+                            </div>
+
+                            <div class="form-buttons">
+                                <button class="btn-primary" @onclick="SaveEditUserAsync" disabled="@_busy">Save</button>
+                                <button class="btn-cancel" @onclick="CancelEditUser" disabled="@_busy">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
             </div>
 
             @if (_loading)
@@ -80,7 +110,13 @@
                                 <td>@user.Id</td>
                                 <td>@user.Email</td>
                                 <td>@user.UserRole</td>
-                                <td>
+                               
+                                <td class="actions">
+                                    <button class="btn-small btn-edit"
+                                            disabled="@_busy"
+                                            @onclick="() => StartEditUser(user)">
+                                        Edit
+                                    </button>
                                     <button class="btn-small btn-danger"
                                             disabled="@_busy"
                                             @onclick="() => DeleteUserAsync(user.Id)">
@@ -142,6 +178,49 @@
                         </div>
                     </div>
                 }
+                @if (_showEditNews)
+                {
+                    <div class="admin-form-popup">
+                        <div class="admin-form">
+                            <h3>Edit News</h3>
+
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input class="form-input" @bind="_editNews.Title" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" class="form-input"
+                                       @bind-value="_editNews.Date"
+                                       @bind-value:format="yyyy-MM-dd" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Description (HTML allowed)</label>
+                                <textarea class="form-input" style="min-height:140px;"
+                                          @bind="_editNews.Description"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Image (optional)</label>
+                                @if (!string.IsNullOrWhiteSpace(_editNewsExistingImageUrl))
+                                {
+                                    <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 6px;">
+                                        Current image: Yes
+                                    </div>
+                                }
+                                <InputFile OnChange="OnEditNewsImageSelected" />
+                            </div>
+
+                            <div class="form-buttons">
+                                <button class="btn-primary" @onclick="SaveEditNewsAsync" disabled="@_newsBusy">Save</button>
+                                <button class="btn-cancel" @onclick="CancelEditNews" disabled="@_newsBusy">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
             </div>
 
             @if (_newsLoading)
@@ -172,7 +251,12 @@
                                 <td>@n.Title</td>
                                 <td>@n.Date.ToString("yyyy-MM-dd")</td>
                                 <td>@(!string.IsNullOrWhiteSpace(n.ImageUrl) ? "Yes" : "No")</td>
-                                <td>
+                                <td class="actions">
+                                    <button class="btn-small btn-edit"
+                                            disabled="@_newsBusy"
+                                            @onclick="() => StartEditNews(n)">
+                                        Edit
+                                    </button>
                                     <button class="btn-small btn-danger"
                                             disabled="@_newsBusy"
                                             @onclick="() => DeleteNewsAsync(n.Id)">
@@ -189,227 +273,5 @@
     </div>
 </section>
 
-@code {
-    private bool _loading = true;
-    private bool _busy = false;
-    private string? _error;
 
-    private bool showAddUserForm = false;
-    private AdminCreateUserDto newUser = new();
-
-    public List<AdminUserDto> Users { get; set; } = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        _error = null;
-        _loading = true;
-
-        var state = await AuthProvider.GetAuthenticationStateAsync();
-        var principal = state.User;
-
-        if (principal.Identity?.IsAuthenticated != true)
-        {
-            Nav.NavigateTo("/login");
-            return;
-        }
-
-        if (!principal.IsInRole("Admin"))
-        {
-            _error = "Access denied: Admin role required.";
-            Nav.NavigateTo("/");
-            return;
-        }
-
-        await ReloadUsersAsync();
-        await ReloadNewsAsync();
-    }
-
-
-    private async Task ReloadUsersAsync()
-    {
-        _error = null;
-        _loading = true;
-
-        try
-        {
-            Users = await AdminApi.GetUsersAsync();
-        }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
-        }
-        finally
-        {
-            _loading = false;
-        }
-    }
-
-    private void ShowAddUser()
-    {
-        _error = null;
-        showAddUserForm = true;
-    }
-
-    private void CancelAddUser()
-    {
-        showAddUserForm = false;
-        newUser = new AdminCreateUserDto();
-    }
-
-    private async Task SaveUserAsync()
-    {
-        _error = null;
-        _busy = true;
-
-        try
-        {
-            var created = await AdminApi.CreateUserAsync(new AdminCreateUserDto
-            {
-                UserName = newUser.UserName.Trim(),
-                Email = newUser.Email.Trim(),
-                Password = newUser.Password
-            });
-
-            Users.Add(created);
-            showAddUserForm = false;
-            newUser = new AdminCreateUserDto();
-        }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private async Task DeleteUserAsync(int id)
-    {
-        _error = null;
-        _busy = true;
-
-        try
-        {
-            await AdminApi.DeleteUserAsync(id);
-            Users.RemoveAll(u => u.Id == id);
-        }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-    private bool _newsLoading = true;
-    private bool _newsBusy = false;
-    private string? _newsError;
-
-    private bool showAddNewsForm = false;
-    private NewsCreateModel newNews = new();
-    private IBrowserFile? newNewsImage;
-
-    public List<Erasmus_SSC.Client.Dtos.AdminNewsDto> NewsItems { get; set; } = new();
-
-    private sealed class NewsCreateModel
-    {
-        public string Title { get; set; } = "";
-        public string Description { get; set; } = "";
-        public DateTime Date { get; set; } = DateTime.UtcNow.Date;
-    }
-
-    private void ShowAddNews()
-    {
-        _newsError = null;
-        showAddNewsForm = true;
-    }
-
-    private void CancelAddNews()
-    {
-        showAddNewsForm = false;
-        newNews = new NewsCreateModel();
-        newNewsImage = null;
-    }
-
-    private void OnNewsImageSelected(InputFileChangeEventArgs e)
-    {
-        newNewsImage = e.FileCount > 0 ? e.File : null;
-    }
-
-    private async Task ReloadNewsAsync()
-    {
-        _newsError = null;
-        _newsLoading = true;
-        try
-        {
-            NewsItems = await NewsApi.GetNewsAsync();
-        }
-        catch (Exception ex)
-        {
-            _newsError = ex.Message;
-        }
-        finally
-        {
-            _newsLoading = false;
-        }
-    }
-
-    private async Task SaveNewsAsync()
-    {
-        _newsError = null;
-        _newsBusy = true;
-
-        try
-        {
-            if (string.IsNullOrWhiteSpace(newNews.Title) || string.IsNullOrWhiteSpace(newNews.Description))
-            {
-                _newsError = "Title and Description are required.";
-                return;
-            }
-
-
-            var description = newNews.Description.Replace("\r\n", "\n").Replace("\n", "<br>");
-
-            var created = await NewsApi.CreateNewsAsync(
-                newNews.Title.Trim(),
-                description,
-                newNews.Date,
-                newNewsImage
-            );
-
-            NewsItems.Insert(0, created);
-            CancelAddNews();
-        }
-        catch (Exception ex)
-        {
-            _newsError = ex.Message;
-        }
-        finally
-        {
-            _newsBusy = false;
-        }
-    }
-
-    private async Task DeleteNewsAsync(int id)
-    {
-        _newsError = null;
-        _newsBusy = true;
-
-        try
-        {
-            await NewsApi.DeleteNewsAsync(id);
-            NewsItems.RemoveAll(x => x.Id == id);
-        }
-        catch (Exception ex)
-        {
-            _newsError = ex.Message;
-        }
-        finally
-        {
-            _newsBusy = false;
-        }
-    }
-
-}
+   

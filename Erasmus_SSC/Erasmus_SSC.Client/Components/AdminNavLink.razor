@@ -1,0 +1,39 @@
+﻿
+@using Microsoft.AspNetCore.Components.Authorization
+@implements IDisposable
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Nav
+
+@if (_isAdmin)
+{
+    <a href="/admin" class="nav__link @(Nav.Uri.Contains("/admin") ? "active" : "")">Admin</a>
+}
+
+@code {
+    private bool _isAdmin;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthProvider.AuthenticationStateChanged += OnAuthChanged;
+        await RefreshAsync();
+    }
+
+    private async void OnAuthChanged(Task<AuthenticationState> task)
+    {
+        await RefreshAsync();
+    }
+
+    private async Task RefreshAsync()
+    {
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+
+        _isAdmin = user.Identity?.IsAuthenticated == true && user.IsInRole("Admin");
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthProvider.AuthenticationStateChanged -= OnAuthChanged;
+    }
+}

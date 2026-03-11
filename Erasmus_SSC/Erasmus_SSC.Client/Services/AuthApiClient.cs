@@ -53,4 +53,12 @@ public sealed class AuthApiClient
 
         return result;
     }
+
+    public async Task LogoutAsync(CancellationToken ct = default)
+    {
+        
+        var resp = await _http.PostAsync("/api/auth/logout", content: null, ct);
+      
+    }
+
 }

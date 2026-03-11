@@ -92,4 +92,43 @@ public sealed class AdminNewsApiClient
             ? $"DeleteNews failed ({(int)resp.StatusCode})"
             : text);
     }
+
+    public async Task<AdminNewsDto> UpdateNewsAsync(
+    int id,
+    string title,
+    string description,
+    DateTime date,
+    IBrowserFile? image,
+    CancellationToken ct = default)
+    {
+        using var content = new MultipartFormDataContent();
+        content.Add(new StringContent(title), "Title");
+        content.Add(new StringContent(description), "Description");
+        content.Add(new StringContent(date.ToString("yyyy-MM-dd")), "Date");
+
+        if (image is not null)
+        {
+            var stream = image.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            var fileContent = new StreamContent(stream);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(image.ContentType);
+            content.Add(fileContent, "Image", image.Name);
+        }
+
+        using var req = await CreateAuthorizedRequestAsync(HttpMethod.Put, $"/api/admin/news/{id}", content, ct);
+        using var resp = await _http.SendAsync(req, ct);
+
+        if (!resp.IsSuccessStatusCode)
+        {
+            var text = await resp.Content.ReadAsStringAsync(ct);
+            throw new InvalidOperationException(string.IsNullOrWhiteSpace(text)
+                ? $"UpdateNews failed ({(int)resp.StatusCode})"
+                : text);
+        }
+
+        var updated = await resp.Content.ReadFromJsonAsync<AdminNewsDto>(cancellationToken: ct);
+        if (updated is null) throw new InvalidOperationException("UpdateNews succeeded but response is empty.");
+
+        return updated;
+    }
+
 }

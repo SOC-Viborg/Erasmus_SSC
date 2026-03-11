@@ -1,4 +1,5 @@
-﻿using Erasmus_SSC.Data;
+﻿using Erasmus_SSC.Client.Dtos;
+using Erasmus_SSC.Data;
 using Erasmus_SSC.Dtos;
 using Erasmus_SSC.Interfaces;
 using Erasmus_SSC.Models;
@@ -114,5 +115,87 @@ namespace Erasmus_SSC.Services
             _logger.LogInformation("Admin deleted user {UserId}", userId);
             return true;
         }
+
+        private async Task<int> GetRoleIdByNameAsync(string roleName, CancellationToken ct)
+        {
+            var normalized = roleName.Trim();
+            var id = await _context.UserRoles
+                .AsNoTracking()
+                .Where(r => r.RoleName == normalized)
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync(ct);
+
+            if (id != 0) return id;
+
+            
+            var role = new UserRole { RoleName = normalized };
+            _context.UserRoles.Add(role);
+            await _context.SaveChangesAsync(ct);
+            return role.Id;
+        }
+        public async Task<UserDto> UpdateUserAsync(int userId, UpdateUserRequestDto dto, CancellationToken ct = default)
+        {
+            if (dto is null) throw new ArgumentNullException(nameof(dto));
+
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId, ct);
+            if (user is null) throw new InvalidOperationException("User not found.");
+
+            var userName = dto.UserName?.Trim();
+            var email = dto.Email?.Trim();
+
+            if (string.IsNullOrWhiteSpace(userName))
+                throw new ArgumentException("UserName is required.", nameof(dto.UserName));
+
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email is required.", nameof(dto.Email));
+
+            // unique check
+            var normalizedUserName = userName.ToLowerInvariant();
+            var normalizedEmail = email.ToLowerInvariant();
+
+            var exists = await _context.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.Id != userId &&
+                               (u.UserName.ToLower() == normalizedUserName ||
+                                u.Email.ToLower() == normalizedEmail), ct);
+
+            if (exists)
+                throw new InvalidOperationException("Another user with the same username or email already exists.");
+
+            user.UserName = userName;
+            user.Email = normalizedEmail;
+
+            //// role
+            //var roleName = string.IsNullOrWhiteSpace(dto.Role) ? "User" : dto.Role.Trim();
+            //user.RoleId = await GetRoleIdByNameAsync(roleName, ct);
+
+            //  password reset
+            if (!string.IsNullOrWhiteSpace(dto.Password))
+            {
+                if (dto.Password.Length < 6)
+                    throw new ArgumentException("Password must be at least 6 characters.", nameof(dto.Password));
+
+                user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
+            }
+
+            await _context.SaveChangesAsync(ct);
+
+            // reload role name
+            //var finalRoleName = await _context.UserRoles
+            //    .AsNoTracking()
+            //    .Where(r => r.Id == user.RoleId)
+            //    .Select(r => r.RoleName)
+            //    .FirstOrDefaultAsync(ct) ?? "User";
+
+            return new UserDto
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+               
+            };
+        }
+
+
     }
 }

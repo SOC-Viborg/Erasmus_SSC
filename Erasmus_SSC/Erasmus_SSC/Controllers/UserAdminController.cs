@@ -1,4 +1,5 @@
-﻿using Erasmus_SSC.Dtos;
+﻿using Erasmus_SSC.Client.Dtos;
+using Erasmus_SSC.Dtos;
 using Erasmus_SSC.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -93,7 +94,32 @@ namespace Erasmus_SSC.Controllers
             }
         }
 
-        
-       
+        [HttpPut("{userId:int}")]
+        public async Task<ActionResult<UserDto>> UpdateUser(int userId, [FromBody] UpdateUserRequestDto dto, CancellationToken ct)
+        {
+            try
+            {
+                var updated = await _userAdminService.UpdateUserAsync(userId, dto, ct);
+                return Ok(updated);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, "UpdateUser validation error");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "UpdateUser failed");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "UpdateUser failed");
+                return StatusCode(500, "An internal error occurred. Please try again later.");
+            }
         }
+
+
+
+    }
 }

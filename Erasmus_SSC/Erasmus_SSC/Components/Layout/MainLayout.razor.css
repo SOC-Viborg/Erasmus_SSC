@@ -114,6 +114,69 @@ main {
         background: #2f7d36;
         border-radius: 2px;
     }
+@media (max-width: 992px) {
+    .navbar {
+        height: auto;
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+    }
+
+    .navbar__container {
+        width: min(1100px, 94%);
+        height: auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem 1rem;
+    }
+
+    .navbar__logo {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.7rem;
+        text-align: center;
+    }
+
+    .navbar__logo-text {
+        white-space: normal;
+        line-height: 1.2;
+        font-size: 0.95rem;
+    }
+
+    .navbar__logo-img {
+        height: 36px;
+        width: auto;
+    }
+
+    .navbar__links {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.7rem 1rem;
+    }
+
+    .nav__link,
+    .dropdown__toggle {
+        font-size: 0.95rem;
+    }
+
+    .nav__dropdown {
+        position: relative;
+    }
+
+    .dropdown__menu {
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 220px;
+        z-index: 200;
+    }
+}
+
 
 @media (max-width: 600px) {
     .nav__link {
@@ -197,48 +260,7 @@ main {
         color: #2f7d36;
         border-radius: 6px;
     }
-/*.footer {
-    background-color: rgba(255, 255, 255, 0.85);
-    color: #002b5c;
-    height: 55px;
-    z-index: 1030;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    box-shadow: none;
-}
 
-.footer-logo {
-    height: 55px;
-    width: auto;
-}
-
-.footer-text {
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: #002b5c;
-}
-
-.footer-info {
-    font-size: 0.9rem;
-    color: #333333;
-    margin-top: 12px;
-}
-
-.footer .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    height: 100%;
-    padding: 8px 20px 0 20px;
-}
-
-.footer-text {
-    font-weight: 600;
-    font-size: 1.05rem;
-    color: #1f3520;
-    margin-top: 8px;
-}
-*/
 
 /*@media (max-width: 768px) {
     .footer .container {

@@ -1,0 +1,43 @@
+﻿@implements IDisposable
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthProvider
+@inject JwtAuthStateProvider JwtAuth
+@inject AuthApiClient AuthApi
+@inject NavigationManager Nav
+
+@if (_isAuthenticated)
+{
+    <button type="button" class="nav__link" @onclick="Logout">Logout</button>
+}
+
+@code {
+    private bool _isAuthenticated;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthProvider.AuthenticationStateChanged += OnAuthChanged;
+        await RefreshAsync();
+    }
+
+    private async void OnAuthChanged(Task<AuthenticationState> task)
+        => await RefreshAsync();
+
+    private async Task RefreshAsync()
+    {
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        _isAuthenticated = state.User.Identity?.IsAuthenticated == true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Logout()
+    {
+        try { await AuthApi.LogoutAsync(); } catch { /* ignore */ }
+
+        await JwtAuth.NotifyLoggedOutAsync();
+
+        Nav.NavigateTo("/", forceLoad: true); 
+    }
+
+    public void Dispose()
+        => AuthProvider.AuthenticationStateChanged -= OnAuthChanged;
+}

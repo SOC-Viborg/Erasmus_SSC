@@ -83,4 +83,24 @@ public sealed class AdminUsersApiClient
             ? $"DeleteUser failed ({(int)resp.StatusCode})"
             : text);
     }
+
+    public async Task<AdminUserDto> UpdateUserAsync(int userId, AdminUpdateUserDto dto, CancellationToken ct = default)
+    {
+        using var req = await CreateAuthorizedRequestAsync(HttpMethod.Put, $"/api/admin/users/{userId}", dto, ct);
+        using var resp = await _http.SendAsync(req, ct);
+
+        if (!resp.IsSuccessStatusCode)
+        {
+            var text = await resp.Content.ReadAsStringAsync(ct);
+            throw new InvalidOperationException(string.IsNullOrWhiteSpace(text)
+                ? $"UpdateUser failed ({(int)resp.StatusCode})"
+                : text);
+        }
+
+        var updated = await resp.Content.ReadFromJsonAsync<AdminUserDto>(cancellationToken: ct);
+        if (updated is null) throw new InvalidOperationException("UpdateUser succeeded but response is empty.");
+
+        return updated;
+    }
+
 }
