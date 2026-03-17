@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 
+@using Microsoft.AspNetCore.Components.Authorization
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -23,8 +24,9 @@
 </head>
 
 <body data-enhance-nav ="false">
-    
-    <Routes/>
+   <CascadingAuthenticationState>
+    <Routes />
+</CascadingAuthenticationState>
 
     <script src="_framework/blazor.web.js"></script>
     <script src="scroll.js"></script>

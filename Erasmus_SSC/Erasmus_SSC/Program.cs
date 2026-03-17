@@ -5,6 +5,7 @@ using Erasmus_SSC.Interfaces;
 using Erasmus_SSC.Models;
 using Erasmus_SSC.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -38,6 +39,7 @@ public class Program
         builder.Services.AddScoped<IUserAdminService, UserAdminService>();
         builder.Services.AddScoped<IJWTService, JWTService>();
         builder.Services.AddScoped<ILoginAttemptService, LoginAttemptService>();
+       
         builder.Services.AddHttpContextAccessor();
 
         builder.Services.AddControllers();
@@ -79,8 +81,9 @@ public class Program
             });
 
         builder.Services.AddAuthorization();
+       
+        builder.Services.AddCascadingAuthenticationState();
 
-        
         builder.Services.AddSwaggerGen(c =>
         {
             c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme

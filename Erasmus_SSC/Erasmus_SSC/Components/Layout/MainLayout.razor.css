@@ -262,24 +262,6 @@ main {
     }
 
 
-/*@media (max-width: 768px) {
-    .footer .container {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .footer-logo {
-        height: 50px;
-        width: auto;
-        margin-top: 3px;
-    }
-
-    .footer-text,
-    .footer-info {
-        margin-top: 2px;
-    }
-}
-*/
 #blazor-error-ui {
     color-scheme: light only;
     background: lightyellow;
