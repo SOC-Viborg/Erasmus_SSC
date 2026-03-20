@@ -1,6 +1,6 @@
-﻿using Erasmus_SSC.Client.Services;
+﻿
 
-namespace Erasmus_SSC.Services;
+namespace Erasmus_SSC.Client.Services;
 
 public sealed class ServerTokenStore : ITokenStore
 {

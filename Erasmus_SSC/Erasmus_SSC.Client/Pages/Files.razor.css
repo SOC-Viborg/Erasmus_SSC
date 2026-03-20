@@ -1,0 +1,39 @@
+﻿.files-page {
+    max-width: 1100px;
+    margin: 100px auto 40px;
+    padding: 0 1rem;
+}
+
+.upload-box {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin: 1rem 0 1.5rem;
+}
+
+.selected-file {
+    margin-bottom: 1rem;
+    color: #555;
+}
+
+.files-error {
+    margin-bottom: 1rem;
+    color: #b00020;
+}
+
+.files-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+    .files-table th,
+    .files-table td {
+        border-bottom: 1px solid #ddd;
+        padding: 0.85rem;
+        text-align: left;
+    }
+
+    .files-table th {
+        background: #f7f7f7;
+    }

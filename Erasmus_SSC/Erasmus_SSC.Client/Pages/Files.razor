@@ -1,0 +1,183 @@
+﻿@page "/files"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject AuthenticationStateProvider AuthProvider
+@inject UserFilesApiClient FilesApi
+@inject IJSRuntime JS
+
+<div class="files-page">
+    <h1>Files</h1>
+
+    @if (!_isAuthenticated)
+    {
+        <p>Please log in to use the shared files area.</p>
+    }
+    else
+    {
+        <div class="upload-box">
+            <InputFile OnChange="OnFileSelected" />
+            <button class="btn-primary" @onclick="UploadAsync" disabled="@(_selectedFile is null || _busy)">
+                Upload
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_selectedFileName))
+        {
+            <p class="selected-file">Selected: @_selectedFileName</p>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <div class="files-error">@_error</div>
+        }
+
+        @if (_loading)
+        {
+            <p>Loading files...</p>
+        }
+        else if (_files.Count == 0)
+        {
+            <p>No files uploaded yet.</p>
+        }
+        else
+        {
+            <table class="files-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Uploader</th>
+                        <th>Uploaded</th>
+                        <th>Size</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var file in _files)
+                    {
+                        <tr>
+                            <td>@file.FileName</td>
+                            <td>@file.OwnerUserName</td>
+                            <td>@file.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@FormatBytes(file.SizeBytes)</td>
+                            <td>
+                                <button class="btn-primary" @onclick="() => DownloadAsync(file)" disabled="@_busy">
+                                    Download
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+</div>
+
+@code {
+    private List<UserFileItemDto> _files = new();
+    private IBrowserFile? _selectedFile;
+    private string? _selectedFileName;
+    private string? _error;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _isAuthenticated;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        _isAuthenticated = state.User.Identity?.IsAuthenticated == true;
+
+        if (_isAuthenticated)
+            await LoadFilesAsync();
+        else
+            _loading = false;
+    }
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        _selectedFile = e.FileCount > 0 ? e.File : null;
+        _selectedFileName = _selectedFile?.Name;
+        _error = null;
+    }
+
+    private async Task LoadFilesAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _files = await FilesApi.GetFilesAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _files = new();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task UploadAsync()
+    {
+        if (_selectedFile is null)
+            return;
+
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            await FilesApi.UploadAsync(_selectedFile);
+            _selectedFile = null;
+            _selectedFileName = null;
+            await LoadFilesAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DownloadAsync(UserFileItemDto file)
+    {
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            var result = await FilesApi.DownloadAsync(file.Id);
+            var base64 = Convert.ToBase64String(result.Bytes);
+
+            await JS.InvokeVoidAsync(
+                "fileDownload.saveAsBase64",
+                result.FileName,
+                result.ContentType,
+                base64);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static string FormatBytes(int bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / 1024.0 / 1024.0:F1} MB";
+    }
+}

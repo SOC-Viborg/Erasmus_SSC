@@ -3,10 +3,10 @@
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager Nav
 
-@if (!_isAuthenticated)
+@if (_isAuthenticated)
 {
-    <a href="/login" class="nav__link @(Nav.Uri.Contains("/login") ? "active" : "")">
-        Log in
+    <a href="/files" class="nav__link @(Nav.Uri.Contains("/files") ? "active" : "")">
+        Files
     </a>
 }
 

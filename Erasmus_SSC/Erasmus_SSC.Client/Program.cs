@@ -1,7 +1,7 @@
 using Erasmus_SSC.Client.Services;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
-using Erasmus_SSC.Services;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Erasmus_SSC.Client
@@ -28,6 +28,7 @@ namespace Erasmus_SSC.Client
             builder.Services.AddScoped<AuthApiClient>();
             builder.Services.AddScoped<AdminUsersApiClient>();
             builder.Services.AddScoped<AdminNewsApiClient>();
+            builder.Services.AddScoped<UserFilesApiClient>();
 
             await builder.Build().RunAsync();
         }

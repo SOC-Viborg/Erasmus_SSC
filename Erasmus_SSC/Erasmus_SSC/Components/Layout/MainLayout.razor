@@ -3,6 +3,8 @@
 @inject IJSRuntime JS
 @implements IDisposable
 @using Microsoft.AspNetCore.Components.Authorization
+@using Erasmus_SSC.Client.Components
+
 
 <div class="navbar @(IsHomePage ? "navbar-animated" : "")">
     <div class="navbar__container">
@@ -31,11 +33,12 @@
 
         <a href="/news" class="nav__link @(Nav.Uri.Contains("/news") ? "active" : "")">What's next?</a>
         <a href="/contact" class="nav__link @(Nav.Uri.Contains("/contact") ? "active" : "")">Contact</a>
-
+        <a href="/login" class="nav__link @(Nav.Uri.Contains("/login") ? "active" : "")">Log in</a>
         <AdminNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
         <LogoutNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
+     <FilesNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
+        
 
-        <a href="/login" class="nav__link @(Nav.Uri.Contains("/login") ? "active" : "")">Log in</a>
 
     </div>
 </div>
