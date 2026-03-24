@@ -59,7 +59,6 @@
     .login__input::placeholder {
         color: #6e8d86;
     }
-
 .btn-primary {
     display: inline-flex;
     justify-content: center;
@@ -73,10 +72,19 @@
     text-decoration: none;
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
+    border: none;
+    outline: none;
 }
 
     .btn-primary:hover {
         transform: translateY(-3px) scale(1.03);
         background: linear-gradient(180deg, #ffffff, #f2ffe8);
         box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary:focus,
+    .btn-primary:focus-visible,
+    .btn-primary:active {
+        outline: none;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
     }

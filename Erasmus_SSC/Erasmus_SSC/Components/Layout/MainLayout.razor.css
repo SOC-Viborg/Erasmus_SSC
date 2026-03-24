@@ -185,17 +185,21 @@ main {
     }
 
     .navbar__links {
-        gap: 1rem; 
+        gap: 0.5rem; 
     }
 }
 .nav__dropdown {
     position: relative;
+    margin-left: 1rem;
 }
 @media (max-width: 600px) {
     .navbar__logo-text {
         font-size: 0.95rem;
     }
-
+    .navbar__container {
+        gap: 0.75rem;
+    }
+   
     .navbar__logo-img {
         height: 30px;
     }
@@ -209,9 +213,11 @@ main {
     color: #1a1a1a;
 }
   @media (max-width: 768px) {
-        .navbar__logo-text {
-            display: none;
-        }
+    .navbar__logo-text {
+        display: none;
+       
+    }
+
     }
 
   .dropdown__toggle {

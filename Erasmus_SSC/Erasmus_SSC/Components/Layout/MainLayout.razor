@@ -21,7 +21,7 @@
             <div class="dropdown__menu">
                 <a href="/partners/mercantec">Mercantec</a>
                 <a href="/partners/rogaland">Fagskolen Rogaland</a>
-                <a href="/partners/godalen">CodeLen</a>
+                <a href="/partners/godalen">Godalen</a>
                 <a href="/partners/graafschap">Graafschap</a>
                 <a href="/partners/learnmark">Learnmark</a>
                 <a href="/partners/rakvere">Rakvere Ametikool</a>
@@ -34,6 +34,7 @@
         <a href="/news" class="nav__link @(Nav.Uri.Contains("/news") ? "active" : "")">What's next?</a>
         <a href="/contact" class="nav__link @(Nav.Uri.Contains("/contact") ? "active" : "")">Contact</a>
         <a href="/login" class="nav__link @(Nav.Uri.Contains("/login") ? "active" : "")">Log in</a>
+
         <AdminNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
         <LogoutNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
      <FilesNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
