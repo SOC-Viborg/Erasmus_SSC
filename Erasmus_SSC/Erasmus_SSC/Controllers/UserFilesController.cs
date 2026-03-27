@@ -161,4 +161,24 @@ public sealed class UserFilesController : ControllerBase
 
         return int.TryParse(raw, out userId);
     }
+   
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id, CancellationToken ct)
+    {
+        var entity = await _db.UserFiles
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
+        if (entity is null)
+            return NotFound(new { message = "File not found." });
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized(new { message = "User id not found in token." });
+
+        var isAdmin = User.IsInRole("Admin");
+
+        if (!isAdmin && entity.OwnerUserId != userId)
+            return Forbid();
+
+        entity.IsDeleted = true;
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
 }

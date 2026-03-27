@@ -10,70 +10,107 @@
 @inject IJSRuntime JS
 
 <div class="files-page">
-    <h1>Files</h1>
-
-    @if (!_isAuthenticated)
-    {
-        <p>Please log in to use the shared files area.</p>
-    }
-    else
-    {
-        <div class="upload-box">
-            <InputFile OnChange="OnFileSelected" />
-            <button class="btn-primary" @onclick="UploadAsync" disabled="@(_selectedFile is null || _busy)">
-                Upload
-            </button>
+    <div class="files-shell">
+        <div class="files-header">
+            <h1>Files</h1>
+            <p class="files-subtitle">
+                Share materials with other users and manage uploaded files in one place.
+            </p>
         </div>
 
-        @if (!string.IsNullOrWhiteSpace(_selectedFileName))
+        @if (!_isAuthenticated)
         {
-            <p class="selected-file">Selected: @_selectedFileName</p>
-        }
-
-        @if (!string.IsNullOrWhiteSpace(_error))
-        {
-            <div class="files-error">@_error</div>
-        }
-
-        @if (_loading)
-        {
-            <p>Loading files...</p>
-        }
-        else if (_files.Count == 0)
-        {
-            <p>No files uploaded yet.</p>
+            <div class="files-message-card">
+                <p>Please log in to use the shared files area.</p>
+            </div>
         }
         else
         {
-            <table class="files-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Uploader</th>
-                        <th>Uploaded</th>
-                        <th>Size</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var file in _files)
+            <div class="upload-card">
+                <div class="upload-card__content">
+                    <label class="upload-label">Upload a file</label>
+
+                    <div class="upload-box">
+                        <InputFile OnChange="OnFileSelected" class="file-input" />
+
+                        <button class="btn-primary"
+                                @onclick="UploadAsync"
+                                disabled="@(_selectedFile is null || _busy)">
+                            Upload
+                        </button>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_selectedFileName))
                     {
-                        <tr>
-                            <td>@file.FileName</td>
-                            <td>@file.OwnerUserName</td>
-                            <td>@file.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-                            <td>@FormatBytes(file.SizeBytes)</td>
-                            <td>
-                                <button class="btn-primary" @onclick="() => DownloadAsync(file)" disabled="@_busy">
-                                    Download
-                                </button>
-                            </td>
-                        </tr>
+                        <p class="selected-file">Selected file: @_selectedFileName</p>
                     }
-                </tbody>
-            </table>
+
+                    @if (!string.IsNullOrWhiteSpace(_error))
+                    {
+                        <div class="files-error">@_error</div>
+                    }
+                </div>
+            </div>
+
+            @if (_loading)
+            {
+                <div class="files-message-card">
+                    <p>Loading files...</p>
+                </div>
+            }
+            else if (_files.Count == 0)
+            {
+                <div class="files-message-card">
+                    <p>No files uploaded yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="files-table-wrap">
+                    <table class="files-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Uploader</th>
+                                <th>Uploaded</th>
+                                <th>Size</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var file in _files)
+                            {
+                                <tr>
+                                    <td class="file-name-cell">@file.FileName</td>
+                                    <td>@file.OwnerUserName</td>
+                                    <td>@file.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>@FormatBytes(file.SizeBytes)</td>
+                                    <td>
+                                        <div class="file-actions">
+                                            <button class="btn-primary"
+                                                    @onclick="() => DownloadAsync(file)"
+                                                    disabled="@_busy">
+                                                Download
+                                            </button>
+
+                                            @if (CanDeleteFile(file))
+                                            {
+                                                <button class="btn-delete"
+                                                        @onclick="() => DeleteAsync(file.Id)"
+                                                        disabled="@_busy">
+                                                    Delete
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
         }
-    }
+    </div>
 </div>
 
 @code {
@@ -84,16 +121,30 @@
     private bool _loading = true;
     private bool _busy;
     private bool _isAuthenticated;
+    private int? _currentUserId;
+    private bool _isAdmin;
 
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthProvider.GetAuthenticationStateAsync();
-        _isAuthenticated = state.User.Identity?.IsAuthenticated == true;
+        var user = state.User;
+
+        _isAuthenticated = user.Identity?.IsAuthenticated == true;
 
         if (_isAuthenticated)
+        {
+            var userIdClaim = user.FindFirst("sub")?.Value
+                              ?? user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (int.TryParse(userIdClaim, out var parsedUserId))
+                _currentUserId = parsedUserId;
+
+            _isAdmin = user.IsInRole("Admin");
+
             await LoadFilesAsync();
-        else
-            _loading = false;
+        }
+
+        _loading = false;
     }
 
     private void OnFileSelected(InputFileChangeEventArgs e)
@@ -180,4 +231,34 @@
         if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
         return $"{bytes / 1024.0 / 1024.0:F1} MB";
     }
+    private bool CanDeleteFile(UserFileItemDto file)
+    {
+        if (!_isAuthenticated)
+            return false;
+
+        if (_isAdmin)
+            return true;
+
+        return _currentUserId.HasValue && file.OwnerUserId == _currentUserId.Value;
+    }
+    private async Task DeleteAsync(int fileId)
+    {
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            await FilesApi.DeleteAsync(fileId);
+            await LoadFilesAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
 }

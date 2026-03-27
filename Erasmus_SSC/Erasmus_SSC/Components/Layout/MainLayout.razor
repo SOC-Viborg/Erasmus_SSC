@@ -35,10 +35,11 @@
         <a href="/contact" class="nav__link @(Nav.Uri.Contains("/contact") ? "active" : "")">Contact</a>
         <a href="/login" class="nav__link @(Nav.Uri.Contains("/login") ? "active" : "")">Log in</a>
 
+      
         <AdminNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
         <LogoutNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
-     <FilesNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
-        
+        <FilesNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
+      
 
 
     </div>

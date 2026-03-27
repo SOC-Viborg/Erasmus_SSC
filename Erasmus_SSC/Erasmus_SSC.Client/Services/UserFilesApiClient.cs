@@ -114,4 +114,18 @@ public sealed class UserFilesApiClient
 
         return (bytes, fileName, contentType);
     }
+
+    public async Task DeleteAsync(int id, CancellationToken ct = default)
+    {
+        using var req = await CreateAuthorizedRequestAsync(HttpMethod.Delete, $"/api/user-files/{id}", null, ct);
+        using var resp = await _http.SendAsync(req, ct);
+        if (!resp.IsSuccessStatusCode)
+        {
+            var text = await resp.Content.ReadAsStringAsync(ct);
+            throw new InvalidOperationException(
+                string.IsNullOrWhiteSpace(text)
+                    ? $"Delete failed ({(int)resp.StatusCode})"
+                    : text);
+        }
+    }
 }
