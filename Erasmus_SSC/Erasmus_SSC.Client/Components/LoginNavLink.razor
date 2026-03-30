@@ -1,0 +1,32 @@
+﻿@implements IDisposable
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Nav
+
+@if (!_isAuthenticated)
+{
+    <a href="/login" class="nav__link @(Nav.Uri.Contains("/login") ? "active" : "")">Log in</a>
+}
+
+@code {
+    private bool _isAuthenticated;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthProvider.AuthenticationStateChanged += OnAuthChanged;
+        await RefreshAsync();
+    }
+
+    private async void OnAuthChanged(Task<AuthenticationState> task)
+        => await RefreshAsync();
+
+    private async Task RefreshAsync()
+    {
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        _isAuthenticated = state.User.Identity?.IsAuthenticated == true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+        => AuthProvider.AuthenticationStateChanged -= OnAuthChanged;
+}
