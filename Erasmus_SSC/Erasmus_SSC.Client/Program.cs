@@ -29,6 +29,7 @@ namespace Erasmus_SSC.Client
             builder.Services.AddScoped<AdminUsersApiClient>();
             builder.Services.AddScoped<AdminNewsApiClient>();
             builder.Services.AddScoped<UserFilesApiClient>();
+            builder.Services.AddScoped<ReportsApiClient>();
 
             await builder.Build().RunAsync();
         }

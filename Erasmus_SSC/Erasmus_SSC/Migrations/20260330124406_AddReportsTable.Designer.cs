@@ -3,6 +3,7 @@ using System;
 using Erasmus_SSC.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Erasmus_SSC.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260330124406_AddReportsTable")]
+    partial class AddReportsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -166,10 +169,6 @@ namespace Erasmus_SSC.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<int>("LanguageId")
-                        .HasColumnType("integer")
-                        .HasColumnName("language_id");
-
                     b.Property<int>("SizeBytes")
                         .HasColumnType("integer")
                         .HasColumnName("size_bytes");
@@ -191,73 +190,7 @@ namespace Erasmus_SSC.Migrations
                     b.HasKey("Id")
                         .HasName("pk_reports");
 
-                    b.HasIndex("LanguageId")
-                        .HasDatabaseName("ix_reports_language_id");
-
                     b.ToTable("Reports", (string)null);
-                });
-
-            modelBuilder.Entity("Erasmus_SSC.Models.ReportLanguage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("code");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.HasKey("Id")
-                        .HasName("pk_report_languages");
-
-                    b.ToTable("ReportLanguages", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Code = "en",
-                            Name = "English"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Code = "da",
-                            Name = "Danish"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Code = "no",
-                            Name = "Norwegian"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Code = "nl",
-                            Name = "Dutch"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Code = "fi",
-                            Name = "Finnish"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Code = "et",
-                            Name = "Estonian"
-                        });
                 });
 
             modelBuilder.Entity("Erasmus_SSC.Models.User", b =>
@@ -390,18 +323,6 @@ namespace Erasmus_SSC.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Erasmus_SSC.Models.Report", b =>
-                {
-                    b.HasOne("Erasmus_SSC.Models.ReportLanguage", "Language")
-                        .WithMany("Reports")
-                        .HasForeignKey("LanguageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_reports_report_languages_language_id");
-
-                    b.Navigation("Language");
-                });
-
             modelBuilder.Entity("Erasmus_SSC.Models.User", b =>
                 {
                     b.HasOne("Erasmus_SSC.Models.UserRole", "Role")
@@ -424,11 +345,6 @@ namespace Erasmus_SSC.Migrations
                         .HasConstraintName("fk_user_files_users_owner_user_id");
 
                     b.Navigation("OwnerUser");
-                });
-
-            modelBuilder.Entity("Erasmus_SSC.Models.ReportLanguage", b =>
-                {
-                    b.Navigation("Reports");
                 });
 
             modelBuilder.Entity("Erasmus_SSC.Models.User", b =>

@@ -31,7 +31,8 @@
             </div>
         </div>
 
-        <a href="/news" class="nav__link @(Nav.Uri.Contains("/news") ? "active" : "")">What's next?</a>
+        <a href="/news" class="nav__link @(Nav.Uri.Contains("/news") ? "active" : "")">What's new?</a>
+        <a href="/reports" class="nav__link @(Nav.Uri.Contains("/reports") ? "active" : "")">Reports</a>
         <a href="/contact" class="nav__link @(Nav.Uri.Contains("/contact") ? "active" : "")">Contact</a>
       
       <LoginNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />

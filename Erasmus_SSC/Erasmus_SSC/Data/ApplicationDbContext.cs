@@ -16,6 +16,8 @@ namespace Erasmus_SSC.Data
         public DbSet<UserFile> UserFiles { get; set; } = null!;
         public DbSet<Download> Downloads { get; set; } = null!;
         public DbSet<News> News { get; set; } = null!;
+        public DbSet<Report> Reports { get; set; } = null!;
+        public DbSet<ReportLanguage> ReportLanguages { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,6 +25,8 @@ namespace Erasmus_SSC.Data
             modelBuilder.Entity<User>().ToTable("Users");
             modelBuilder.Entity<UserRole>().ToTable("UserRoles");
             modelBuilder.Entity<RefreshToken>().ToTable("RefreshTokens");
+            modelBuilder.Entity<Report>().ToTable("Reports");
+            modelBuilder.Entity<ReportLanguage>().ToTable("ReportLanguages");
 
             modelBuilder.Entity<User>()
             .HasOne(u => u.Role)
@@ -41,9 +45,23 @@ namespace Erasmus_SSC.Data
                 .WithMany(u => u.UserFiles)
                 .HasForeignKey(f => f.OwnerUserId);
 
+            modelBuilder.Entity<Report>()
+                .HasOne(r => r.Language)
+                .WithMany(l => l.Reports)
+                .HasForeignKey(r => r.LanguageId);
+
             modelBuilder.Entity<UserRole>().HasData(
                 new UserRole { Id = 1, RoleName = "Admin" },
                 new UserRole { Id = 2, RoleName = "User" }
+            );
+
+            modelBuilder.Entity<ReportLanguage>().HasData(
+                new ReportLanguage { Id = 1, Name = "English", Code = "en" },
+                new ReportLanguage { Id = 2, Name = "Danish", Code = "da" },
+                new ReportLanguage { Id = 3, Name = "Norwegian", Code = "no" },
+                new ReportLanguage { Id = 4, Name = "Dutch", Code = "nl" },
+                new ReportLanguage { Id = 5, Name = "Finnish", Code = "fi" },
+                new ReportLanguage { Id = 6, Name = "Estonian", Code = "et" }
             );
         }
     }

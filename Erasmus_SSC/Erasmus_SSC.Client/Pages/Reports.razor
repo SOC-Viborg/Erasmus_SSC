@@ -1,0 +1,208 @@
+﻿@page "/reports"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+
+@using Erasmus_SSC.Client.Dtos
+@using Erasmus_SSC.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject ReportsApiClient ReportsApi
+@inject AuthenticationStateProvider AuthProvider
+@inject IJSRuntime JS
+
+<div class="reports-page">
+    <div class="reports-shell">
+        <div class="reports-header">
+            <h1>Reports</h1>
+            <p class="reports-subtitle">
+                Public project reports and downloadable materials.
+            </p>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <div class="reports-message-card reports-error">@_error</div>
+        }
+
+        @if (_languages.Count > 0)
+        {
+            <div class="reports-language-bar">
+                @foreach (var language in _languages)
+                {
+                    <button type="button"
+                            class="reports-language-button @(language.Id == _selectedLanguageId ? "is-active" : null)"
+                            @onclick="() => SelectLanguage(language.Id)"
+                            disabled="@_busy">
+                        @language.Name
+                    </button>
+                }
+            </div>
+        }
+
+        @if (_loading)
+        {
+            <div class="reports-message-card">
+                <p>Loading reports...</p>
+            </div>
+        }
+        else if (!FilteredReports.Any())
+        {
+            <div class="reports-message-card">
+                <p>No reports available for the selected language.</p>
+            </div>
+        }
+        else
+        {
+            <div class="reports-table-wrap">
+                <table class="reports-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Language</th>
+                            <th>File</th>
+                            <th>Uploaded</th>
+                            <th>Size</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var report in FilteredReports)
+                        {
+                            <tr>
+                                <td class="report-title-cell">@report.Title</td>
+                                <td>@report.LanguageName</td>
+                                <td>@report.FileName</td>
+                                <td>@report.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@FormatBytes(report.SizeBytes)</td>
+                                <td>
+                                    <div class="report-actions">
+                                        <button class="btn-primary"
+                                                @onclick="() => DownloadAsync(report)"
+                                                disabled="@_busy">
+                                            Download
+                                        </button>
+
+                                        @if (_isAdmin)
+                                        {
+                                            <button class="btn-delete"
+                                                    @onclick="() => DeleteAsync(report.Id)"
+                                                    disabled="@_busy">
+                                                Delete
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<ReportItemDto> _reports = new();
+    private List<ReportLanguageDto> _languages = new();
+    private string? _error;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _isAdmin;
+    private int _selectedLanguageId = 1;
+
+    private IEnumerable<ReportItemDto> FilteredReports =>
+        _reports.Where(x => x.LanguageId == _selectedLanguageId);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        _isAdmin = state.User.Identity?.IsAuthenticated == true && state.User.IsInRole("Admin");
+
+        await LoadReportsAsync();
+    }
+
+    private async Task LoadReportsAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _languages = await ReportsApi.GetLanguagesAsync();
+            if (_languages.Count > 0 && _languages.All(x => x.Id != _selectedLanguageId))
+                _selectedLanguageId = _languages[0].Id;
+
+            _reports = await ReportsApi.GetReportsAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _reports = new();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task DownloadAsync(ReportItemDto report)
+    {
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            var result = await ReportsApi.DownloadAsync(report.Id);
+            var base64 = Convert.ToBase64String(result.Bytes);
+
+            await JS.InvokeVoidAsync(
+                "fileDownload.saveAsBase64",
+                result.FileName,
+                result.ContentType,
+                base64);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void SelectLanguage(int languageId)
+    {
+        _selectedLanguageId = languageId;
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            await ReportsApi.DeleteAsync(id);
+            _reports.RemoveAll(x => x.Id == id);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static string FormatBytes(int bytes)
+    {
+        if (bytes < 1024)
+            return $"{bytes} B";
+
+        if (bytes < 1024 * 1024)
+            return $"{bytes / 1024.0:F1} KB";
+
+        return $"{bytes / 1024.0 / 1024.0:F1} MB";
+    }
+}

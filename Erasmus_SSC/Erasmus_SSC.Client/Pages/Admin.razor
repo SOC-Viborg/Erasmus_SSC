@@ -8,6 +8,7 @@
 
 @inject AdminNewsApiClient NewsApi
 @inject AdminUsersApiClient AdminApi
+@inject ReportsApiClient ReportsApi
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager Nav
 
@@ -270,6 +271,114 @@
             }
         </div>
 
+        <div class="admin-card">
+            <h2>Reports</h2>
+
+            @if (!string.IsNullOrWhiteSpace(_reportsError))
+            {
+                <div class="login__error">@_reportsError</div>
+            }
+
+            <div class="admin-actions">
+                <button type="button" class="btn-primary" @onclick="ShowAddReport">Add Report</button>
+
+                @if (_showAddReport)
+                {
+                    <div class="admin-form-popup">
+                        <div class="admin-form">
+                            <h3>Add Report</h3>
+
+                            @if (!string.IsNullOrWhiteSpace(_reportsError))
+                            {
+                                <div class="login__error">@_reportsError</div>
+                            }
+
+                            @if (ReportLanguages.Count == 0)
+                            {
+                                <div class="login__error">
+                                    Report languages are not available. Check that the database migration for report languages has been applied.
+                                </div>
+                            }
+
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input class="form-input" @bind="_newReportTitle" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>File</label>
+                                <InputFile OnChange="OnReportSelected" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Language</label>
+                                <select class="form-input" @bind="_newReportLanguageId">
+                                    @foreach (var language in ReportLanguages)
+                                    {
+                                        <option value="@language.Id">@language.Name</option>
+                                    }
+                                </select>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(_selectedReportName))
+                            {
+                                <div style="font-size: 0.95rem; opacity: 0.9;">
+                                    Selected file: @_selectedReportName
+                                </div>
+                            }
+
+                            <div class="form-buttons">
+                                <button type="button" class="btn-primary" @onclick="SaveReportAsync" disabled="@(_reportsBusy || ReportLanguages.Count == 0)">Save</button>
+                                <button type="button" class="btn-cancel" @onclick="CancelAddReport" disabled="@_reportsBusy">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (_reportsLoading)
+            {
+                <p>Loading reports...</p>
+            }
+            else if (ReportItems.Count == 0)
+            {
+                <p>No reports yet</p>
+            }
+            else
+            {
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width:70px;">ID</th>
+                            <th>Title</th>
+                            <th>Language</th>
+                            <th>File</th>
+                            <th style="width:150px;">Uploaded</th>
+                            <th style="width:120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var report in ReportItems)
+                        {
+                            <tr>
+                                <td>@report.Id</td>
+                                <td>@report.Title</td>
+                                <td>@report.LanguageName</td>
+                                <td>@report.FileName</td>
+                                <td>@report.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                                <td class="actions">
+                                    <button class="btn-small btn-danger"
+                                            disabled="@_reportsBusy"
+                                            @onclick="() => DeleteReportAsync(report.Id)">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
     </div>
 </section>
 

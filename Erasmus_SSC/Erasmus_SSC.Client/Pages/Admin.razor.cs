@@ -12,6 +12,18 @@ public partial class Admin
     private bool _loading = true;
     private bool _busy = false;
     private string? _error;
+    private bool _reportsLoading = true;
+    private bool _reportsBusy = false;
+    private string? _reportsError;
+
+    private bool _showAddReport;
+    private string _newReportTitle = string.Empty;
+    private int _newReportLanguageId = 1;
+    private IBrowserFile? _newReportFile;
+    private string? _selectedReportName;
+
+    public List<ReportItemDto> ReportItems { get; set; } = new();
+    public List<ReportLanguageDto> ReportLanguages { get; set; } = new();
 
     private bool showAddUserForm = false;
     private AdminCreateUserDto newUser = new();
@@ -41,6 +53,7 @@ public partial class Admin
 
         await ReloadUsersAsync();
         await ReloadNewsAsync();
+        await ReloadReportsAsync();
     }
 
 
@@ -373,6 +386,108 @@ public partial class Admin
         finally
         {
             _newsBusy = false;
+        }
+    }
+
+    private async Task ReloadReportsAsync()
+    {
+        _reportsError = null;
+        _reportsLoading = true;
+
+        try
+        {
+            ReportLanguages = await ReportsApi.GetLanguagesAsync();
+            ReportItems = await ReportsApi.GetReportsAsync();
+        }
+        catch (Exception ex)
+        {
+            _reportsError = ex.Message;
+        }
+        finally
+        {
+            _reportsLoading = false;
+        }
+    }
+
+    private void ShowAddReport()
+    {
+        _reportsError = null;
+        _showAddReport = true;
+    }
+
+    private void CancelAddReport()
+    {
+        _showAddReport = false;
+        _newReportTitle = string.Empty;
+        _newReportLanguageId = 1;
+        _newReportFile = null;
+        _selectedReportName = null;
+    }
+
+    private void OnReportSelected(InputFileChangeEventArgs e)
+    {
+        _newReportFile = e.FileCount > 0 ? e.File : null;
+        _selectedReportName = _newReportFile?.Name;
+        _reportsError = null;
+    }
+
+    private async Task SaveReportAsync()
+    {
+        if (_reportsBusy)
+            return;
+
+        _reportsError = null;
+        _reportsBusy = true;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_newReportTitle))
+            {
+                _reportsError = "Title is required.";
+                return;
+            }
+
+            if (_newReportFile is null)
+            {
+                _reportsError = "Please select a file.";
+                return;
+            }
+
+            var created = await ReportsApi.UploadAsync(_newReportTitle.Trim(), _newReportLanguageId, _newReportFile);
+            ReportItems.Insert(0, created);
+
+            CancelAddReport();
+        }
+        catch (Exception ex)
+        {
+            _reportsError = ex.Message;
+        }
+        finally
+        {
+            _reportsBusy = false;
+        }
+    }
+
+    private async Task DeleteReportAsync(int id)
+    {
+        if (_reportsBusy)
+            return;
+
+        _reportsError = null;
+        _reportsBusy = true;
+
+        try
+        {
+            await ReportsApi.DeleteAsync(id);
+            ReportItems.RemoveAll(x => x.Id == id);
+        }
+        catch (Exception ex)
+        {
+            _reportsError = ex.Message;
+        }
+        finally
+        {
+            _reportsBusy = false;
         }
     }
 
