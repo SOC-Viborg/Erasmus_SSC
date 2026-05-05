@@ -23,78 +23,74 @@
             <div class="reports-message-card reports-error">@_error</div>
         }
 
-        @if (_languages.Count > 0)
-        {
-            <div class="reports-language-bar">
-                @foreach (var language in _languages)
-                {
-                    <button type="button"
-                            class="reports-language-button @(language.Id == _selectedLanguageId ? "is-active" : null)"
-                            @onclick="() => SelectLanguage(language.Id)"
-                            disabled="@_busy">
-                        @language.Name
-                    </button>
-                }
-            </div>
-        }
-
         @if (_loading)
         {
             <div class="reports-message-card">
                 <p>Loading reports...</p>
             </div>
         }
-        else if (!FilteredReports.Any())
+        else if (!GroupedReports.Any())
         {
             <div class="reports-message-card">
-                <p>No reports available for the selected language.</p>
+                <p>No reports available.</p>
             </div>
         }
         else
         {
-            <div class="reports-table-wrap">
-                <table class="reports-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Language</th>
-                            <th>File</th>
-                            <th>Uploaded</th>
-                            <th>Size</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var report in FilteredReports)
-                        {
-                            <tr>
-                                <td class="report-title-cell">@report.Title</td>
-                                <td>@report.LanguageName</td>
-                                <td>@report.FileName</td>
-                                <td>@report.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-                                <td>@FormatBytes(report.SizeBytes)</td>
-                                <td>
-                                    <div class="report-actions">
-                                        <button class="btn-primary"
-                                                @onclick="() => DownloadAsync(report)"
-                                                disabled="@_busy">
-                                            Download
-                                        </button>
+            <div class="reports-list" aria-label="Reports">
+                @foreach (var group in GroupedReports)
+                {
+                    <div class="report-row">
+                        <div class="report-title-group">
+                            <span class="report-file-icon @GetIconClass(group.PrimaryReport)" aria-hidden="true">
+                                @if (IsPdf(group.PrimaryReport))
+                                {
+                                    <span>PDF</span>
+                                }
+                            </span>
+                            <span class="report-title">@group.Title</span>
+                        </div>
 
-                                        @if (_isAdmin)
-                                        {
-                                            <button class="btn-delete"
-                                                    @onclick="() => DeleteAsync(report.Id)"
-                                                    disabled="@_busy">
-                                                Delete
-                                            </button>
-                                        }
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                        <div class="report-language-group">
+                            <span class="report-language-label">Available in:</span>
+                            <span class="report-language-links">
+                                @for (var i = 0; i < group.Reports.Count; i++)
+                                {
+                                    var report = group.Reports[i];
+
+                                    <button type="button"
+                                            class="report-language-link"
+                                            title="@GetLanguageTitle(report)"
+                                            @onclick="() => DownloadAsync(report)"
+                                            disabled="@_busy">
+                                        @GetLanguageCode(report)
+                                    </button>
+
+                                    @if (i < group.Reports.Count - 1)
+                                    {
+                                        <span class="report-language-separator">/</span>
+                                    }
+                                }
+                            </span>
+
+                            @if (_isAdmin)
+                            {
+                                <span class="report-admin-actions">
+                                    @foreach (var report in group.Reports)
+                                    {
+                                        <button type="button"
+                                                class="report-delete-link"
+                                                title="Delete @GetLanguageCode(report)"
+                                                @onclick="() => DeleteAsync(report.Id)"
+                                                disabled="@_busy">
+                                            Delete @GetLanguageCode(report)
+                                        </button>
+                                    }
+                                </span>
+                            }
+                        </div>
+                    </div>
+                }
             </div>
         }
     </div>
@@ -102,15 +98,19 @@
 
 @code {
     private List<ReportItemDto> _reports = new();
-    private List<ReportLanguageDto> _languages = new();
     private string? _error;
     private bool _loading = true;
     private bool _busy;
     private bool _isAdmin;
-    private int _selectedLanguageId = 1;
 
-    private IEnumerable<ReportItemDto> FilteredReports =>
-        _reports.Where(x => x.LanguageId == _selectedLanguageId);
+    private List<ReportGroup> GroupedReports =>
+        _reports
+            .GroupBy(x => x.Title.Trim(), StringComparer.OrdinalIgnoreCase)
+            .Select(x => new ReportGroup(
+                string.IsNullOrWhiteSpace(x.First().Title) ? x.First().FileName : x.First().Title,
+                x.OrderBy(report => GetLanguageCode(report)).ThenBy(report => report.FileName).ToList()))
+            .OrderBy(x => x.Title)
+            .ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -127,10 +127,6 @@
 
         try
         {
-            _languages = await ReportsApi.GetLanguagesAsync();
-            if (_languages.Count > 0 && _languages.All(x => x.Id != _selectedLanguageId))
-                _selectedLanguageId = _languages[0].Id;
-
             _reports = await ReportsApi.GetReportsAsync();
         }
         catch (Exception ex)
@@ -170,11 +166,6 @@
         }
     }
 
-    private void SelectLanguage(int languageId)
-    {
-        _selectedLanguageId = languageId;
-    }
-
     private async Task DeleteAsync(int id)
     {
         _busy = true;
@@ -204,5 +195,25 @@
             return $"{bytes / 1024.0:F1} KB";
 
         return $"{bytes / 1024.0 / 1024.0:F1} MB";
+    }
+
+    private static bool IsPdf(ReportItemDto report) =>
+        report.FileType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase) ||
+        report.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
+
+    private static string GetIconClass(ReportItemDto report) =>
+        IsPdf(report) ? "is-pdf" : "is-file";
+
+    private static string GetLanguageCode(ReportItemDto report) =>
+        string.IsNullOrWhiteSpace(report.LanguageCode)
+            ? report.LanguageName
+            : report.LanguageCode.ToUpperInvariant();
+
+    private static string GetLanguageTitle(ReportItemDto report) =>
+        $"Download {report.Title} ({report.LanguageName}, {FormatBytes(report.SizeBytes)})";
+
+    private sealed record ReportGroup(string Title, List<ReportItemDto> Reports)
+    {
+        public ReportItemDto PrimaryReport => Reports[0];
     }
 }
