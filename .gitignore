@@ -362,3 +362,9 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Erasmus_SSC.zip
+
+# Local secrets and environment-specific configuration
+.env
+*.env
+appsettings.Production.json
+appsettings.*.local.json

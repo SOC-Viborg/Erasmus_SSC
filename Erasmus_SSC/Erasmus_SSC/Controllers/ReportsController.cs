@@ -13,7 +13,7 @@ public sealed class ReportsController : ControllerBase
 {
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".pdf", ".doc", ".docx", ".exe"
+        ".pdf", ".doc", ".docx"
     };
 
     private const long MaxFileBytes = 20 * 1024 * 1024; // 20 MB
