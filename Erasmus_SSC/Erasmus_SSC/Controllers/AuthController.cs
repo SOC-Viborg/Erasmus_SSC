@@ -65,8 +65,7 @@ namespace Erasmus_SSC.Controllers
                 
                 return Ok(new
                 {
-                    accessToken = result.AccessToken,
-                    refreshToken = result.RefreshToken
+                    accessToken = result.AccessToken
                 });
 
              

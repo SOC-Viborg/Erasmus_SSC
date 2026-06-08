@@ -43,6 +43,17 @@
     margin-bottom: 0.5rem;
 }
 
+.news-status {
+    margin: 1.5rem 0;
+    text-align: center;
+    color: #24543b;
+    font-weight: 600;
+}
+
+.news-status--error {
+    color: #8a1f17;
+}
+
 .news-image {
     width: 100%;
     border-radius: 8px;

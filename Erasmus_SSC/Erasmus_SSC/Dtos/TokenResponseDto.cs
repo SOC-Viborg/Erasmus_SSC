@@ -7,7 +7,8 @@ namespace Erasmus_SSC.Dtos
         {
             [JsonPropertyName("accessToken")]
             public string AccessToken { get; set; } = string.Empty;
-            [JsonPropertyName("refreshToken")]
+
+            [JsonIgnore]
             public string? RefreshToken { get; set; }
         }
     

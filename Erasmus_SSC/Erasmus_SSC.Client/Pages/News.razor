@@ -10,9 +10,17 @@
     <div class="title"><strong>News</strong></div>
     <hr />
 
-    @if (NewsItems == null || NewsItems.Count == 0)
+    @if (_loading)
     {
-        <p>No news yet</p>
+        <p class="news-status">Loading news...</p>
+    }
+    else if (!string.IsNullOrWhiteSpace(_error))
+    {
+        <p class="news-status news-status--error">@_error</p>
+    }
+    else if (NewsItems.Count == 0)
+    {
+        <p class="news-status">No news yet</p>
     }
     else
     {
