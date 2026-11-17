@@ -153,13 +153,11 @@ public class Program
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-       
         await db.Database.MigrateAsync();
 
        
         if (!app.Environment.IsDevelopment())
             return;
-
         
         if (!await db.UserRoles.AnyAsync(r => r.Id == 1))
             db.UserRoles.Add(new UserRole { Id = 1, RoleName = "Admin" });
