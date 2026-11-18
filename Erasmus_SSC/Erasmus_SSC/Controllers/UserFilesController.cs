@@ -26,15 +26,18 @@ public sealed class UserFilesController : ControllerBase
     private readonly ApplicationDbContext _db;
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<UserFilesController> _logger;
+    private readonly string? _filePath;
 
     public UserFilesController(
         ApplicationDbContext db,
         IWebHostEnvironment env,
-        ILogger<UserFilesController> logger)
+        ILogger<UserFilesController> logger,
+        IConfiguration config)
     {
         _db = db;
         _env = env;
         _logger = logger;
+        _filePath = config["FilePath"];
     }
 
     [HttpGet]
@@ -87,11 +90,11 @@ public sealed class UserFilesController : ControllerBase
         if (string.IsNullOrWhiteSpace(ext) || !AllowedExtensions.Contains(ext))
             return BadRequest(new { message = "Unsupported file type." });
 
-        var storageFolder = Path.Combine(_env.ContentRootPath, "App_Data", "user-files");
-        Directory.CreateDirectory(storageFolder);
+        var storageFolder = _filePath;
+        Directory.CreateDirectory(storageFolder!);
 
         var storedFileName = $"{Guid.NewGuid():N}{ext}";
-        var absolutePath = Path.Combine(storageFolder, storedFileName);
+        var absolutePath = Path.Combine(storageFolder!, storedFileName);
 
         await using (var fs = System.IO.File.Create(absolutePath))
         {
@@ -141,7 +144,7 @@ public sealed class UserFilesController : ControllerBase
         if (entity is null)
             return NotFound(new { message = "File not found." });
 
-        var absolutePath = Path.Combine(_env.ContentRootPath, "App_Data", "user-files", entity.StoredPath);
+        var absolutePath = Path.Combine(_filePath!, entity.StoredPath);
 
         if (!System.IO.File.Exists(absolutePath))
             return NotFound(new { message = "Stored file not found on disk." });
